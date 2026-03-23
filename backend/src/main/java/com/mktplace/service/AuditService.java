@@ -3,6 +3,7 @@ package com.mktplace.service;
 import com.mktplace.model.AuditLog;
 import com.mktplace.repository.AuditLogRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,7 @@ public class AuditService {
         this.auditLogRepository = auditLogRepository;
     }
 
+    @Async("marketplaceTaskExecutor")
     public void logAction(String action, String resourceType, String resourceId, String metadata) {
         auditLogRepository.save(AuditLog.builder()
                 .actorEmail(currentActor())
@@ -27,6 +29,7 @@ public class AuditService {
                 .build());
     }
 
+    @Async("marketplaceTaskExecutor")
     public void logHttpRequest(HttpServletRequest request, int status) {
         auditLogRepository.save(AuditLog.builder()
                 .actorEmail(currentActor())

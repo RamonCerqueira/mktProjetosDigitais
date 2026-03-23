@@ -3,7 +3,9 @@ package com.mktplace.service;
 import com.mktplace.dto.AuthDtos.*;
 import com.mktplace.enums.OfferActionType;
 import com.mktplace.enums.OfferStatus;
+import com.mktplace.events.OfferLifecycleEvent;
 import com.mktplace.exception.BusinessException;
+import com.mktplace.messaging.MarketplaceEventPublisher;
 import com.mktplace.model.Message;
 import com.mktplace.model.Offer;
 import com.mktplace.model.OfferHistory;
@@ -32,8 +34,9 @@ public class OfferService {
     private final SimpMessagingTemplate messagingTemplate;
     private final FraudPreventionService fraudPreventionService;
     private final AuditService auditService;
+    private final MarketplaceEventPublisher eventPublisher;
 
-    public OfferService(OfferRepository offerRepository, OfferHistoryRepository offerHistoryRepository, MessageRepository messageRepository, ProjectService projectService, UserRepository userRepository, SimpMessagingTemplate messagingTemplate, FraudPreventionService fraudPreventionService, AuditService auditService) {
+    public OfferService(OfferRepository offerRepository, OfferHistoryRepository offerHistoryRepository, MessageRepository messageRepository, ProjectService projectService, UserRepository userRepository, SimpMessagingTemplate messagingTemplate, FraudPreventionService fraudPreventionService, AuditService auditService, MarketplaceEventPublisher eventPublisher) {
         this.offerRepository = offerRepository;
         this.offerHistoryRepository = offerHistoryRepository;
         this.messageRepository = messageRepository;
@@ -42,6 +45,7 @@ public class OfferService {
         this.messagingTemplate = messagingTemplate;
         this.fraudPreventionService = fraudPreventionService;
         this.auditService = auditService;
+        this.eventPublisher = eventPublisher;
     }
 
     public OfferResponse createOffer(User buyer, OfferRequest request) {
@@ -50,6 +54,7 @@ public class OfferService {
         Offer offer = offerRepository.save(Offer.builder().project(project).buyer(buyer).seller(project.getSeller()).proposer(buyer).negotiationKey(UUID.randomUUID().toString()).amount(request.amount()).status(OfferStatus.OPEN).createdAt(Instant.now()).updatedAt(Instant.now()).build());
         appendHistory(offer, buyer, OfferActionType.CREATED, request.amount(), "Proposta inicial");
         auditService.logAction("OFFER_CREATED", "OFFER", String.valueOf(offer.getId()), "project=" + project.getId());
+        eventPublisher.publish(new OfferLifecycleEvent(offer.getId(), project.getId(), buyer.getId(), project.getSeller().getId(), "CREATED", offer.getAmount()), "notification");
         return toResponse(offer);
     }
 
@@ -65,6 +70,7 @@ public class OfferService {
         offerRepository.save(current);
         appendHistory(counter, actor, OfferActionType.COUNTERED, request.amount(), "Contra-proposta criada");
         auditService.logAction("OFFER_COUNTERED", "OFFER", String.valueOf(counter.getId()), current.getNegotiationKey());
+        eventPublisher.publish(new OfferLifecycleEvent(counter.getId(), current.getProject().getId(), current.getBuyer().getId(), current.getSeller().getId(), "COUNTERED", counter.getAmount()), "notification");
         return toResponse(counter);
     }
 
@@ -78,6 +84,7 @@ public class OfferService {
         offerRepository.save(offer);
         appendHistory(offer, actor, OfferActionType.ACCEPTED, offer.getAmount(), "Oferta aceita");
         auditService.logAction("OFFER_ACCEPTED", "OFFER", String.valueOf(offer.getId()), offer.getNegotiationKey());
+        eventPublisher.publish(new OfferLifecycleEvent(offer.getId(), offer.getProject().getId(), offer.getBuyer().getId(), offer.getSeller().getId(), "ACCEPTED", offer.getAmount()), "notification");
         return toResponse(offer);
     }
 
@@ -91,6 +98,7 @@ public class OfferService {
         offerRepository.save(offer);
         appendHistory(offer, actor, OfferActionType.REJECTED, offer.getAmount(), "Oferta rejeitada");
         auditService.logAction("OFFER_REJECTED", "OFFER", String.valueOf(offer.getId()), offer.getNegotiationKey());
+        eventPublisher.publish(new OfferLifecycleEvent(offer.getId(), offer.getProject().getId(), offer.getBuyer().getId(), offer.getSeller().getId(), "REJECTED", offer.getAmount()), "notification");
         return toResponse(offer);
     }
 
@@ -116,6 +124,7 @@ public class OfferService {
         MessageResponse response = new MessageResponse(message.getId(), offer.getId(), offer.getNegotiationKey(), sender.getId(), sender.getName(), receiver.getId(), receiver.getName(), message.getContent(), message.getCreatedAt());
         messagingTemplate.convertAndSend("/topic/offers/" + offer.getNegotiationKey(), response);
         auditService.logAction("MESSAGE_SENT", "OFFER", String.valueOf(offer.getId()), "receiver=" + receiver.getId());
+        eventPublisher.publish(new OfferLifecycleEvent(offer.getId(), offer.getProject().getId(), offer.getBuyer().getId(), offer.getSeller().getId(), "MESSAGE_SENT", offer.getAmount()), "notification");
         return response;
     }
 

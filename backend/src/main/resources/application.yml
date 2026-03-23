@@ -13,6 +13,21 @@ spring:
   jackson:
     serialization:
       write-dates-as-timestamps: false
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      timeout: 2s
+  cache:
+    type: redis
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        default-requeue-rejected: false
   mvc:
     problemdetails:
       enabled: true
@@ -29,6 +44,8 @@ app:
     webhook-secret: ${APP_STRIPE_WEBHOOK_SECRET:}
     success-url: ${APP_STRIPE_SUCCESS_URL:http://localhost:3000/dashboard}
     cancel-url: ${APP_STRIPE_CANCEL_URL:http://localhost:3000/projects}
+  events:
+    enabled: true
 server:
   servlet:
     context-path: /api
@@ -36,3 +53,8 @@ logging:
   level:
     org.springframework.security: INFO
     com.mktplace: INFO
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

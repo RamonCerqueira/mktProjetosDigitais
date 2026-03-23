@@ -5,7 +5,7 @@ Monorepo organizado em duas pastas principais:
 - `frontend/`: aplicação Next.js com fluxos de cadastro, login, assinatura, dashboard e marketplace público.
 
 ## Stack
-- Backend: Java 25, Spring Boot, Spring Security, JPA/Hibernate, PostgreSQL, JWT + refresh token, WebSocket, Redis-ready, Docker
+- Backend: Java 25, Spring Boot, Spring Security, JPA/Hibernate, PostgreSQL, Redis cache, RabbitMQ, eventos assíncronos, WebSocket, Docker
 - Frontend: Next.js (TypeScript), TailwindCSS, Axios
 
 ## Segurança implementada
@@ -29,6 +29,13 @@ Monorepo organizado em duas pastas principais:
 - Validação documental em tempo real na tela de registro
 - Marketplace com filtros geográficos e busca com base na localização do usuário
 
+## Preparação para escala
+- Cache Redis para listagem pública, ranking e validação de capacidade de publicação
+- RabbitMQ com filas dedicadas para auditoria, notificações e integrações externas
+- Processamento assíncrono com `@Async` para auditoria e reação a eventos de domínio
+- Arquitetura event-driven com publicação de eventos de projeto, oferta, assinatura e transação
+- `docker-compose.yml` já sobe PostgreSQL, Redis, RabbitMQ, backend e frontend para desenvolvimento local
+
 ## Geolocalização
 - O frontend solicita autorização explícita ao navegador para acessar a localização do usuário.
 - A localização pode ser usada no cadastro para salvar cidade/UF/latitude/longitude do usuário.
@@ -39,6 +46,13 @@ Monorepo organizado em duas pastas principais:
 ```bash
 docker compose up --build
 ```
+
+### Serviços auxiliares disponíveis no Docker Compose
+- Backend API: `http://localhost:8080/api`
+- Frontend: `http://localhost:3000`
+- RabbitMQ Management: `http://localhost:15672` (`marketplace` / `marketplace`)
+- Redis: `localhost:6379`
+- PostgreSQL: `localhost:5432`
 
 ## Como rodar localmente
 ### Backend
@@ -62,14 +76,13 @@ npm run dev
 - Cadastro valida CPF/CNPJ antes de criar conta.
 - Antifraude bloqueia auto-compra, auto-negociação e ofertas excessivamente baixas.
 
-
 ## Sistema financeiro
 - Comissão da plataforma de 10% por venda
 - Estados da transação: `PENDING`, `HELD`, `RELEASED`, `REFUNDED`
 - Escrow: após pagamento confirmado pelo Stripe, a transação fica em `HELD` até a confirmação do comprador
 - Stripe: criação de checkout e webhook com validação de assinatura
 - Refund e liberação de escrow auditados no backend
-
+- Eventos financeiros podem ser consumidos de forma assíncrona via RabbitMQ para integrações e conciliações futuras
 
 ## Sistema de negociação
 - Propostas formais com status e proponente identificado
@@ -78,14 +91,13 @@ npm run dev
 - Histórico completo de ações (`created`, `countered`, `accepted`, `rejected`, `message_sent`)
 - Chat integrado por negociação com validação de participantes
 - Logs de auditoria e bloqueios contra manipulação de ofertas fechadas ou por usuários não autorizados
-
+- Eventos de negociação publicados para filas de notificação
 
 ## Chat em tempo real
 - WebSocket/STOMP no backend com persistência de mensagens
 - Histórico completo por negociação
 - Identificação de remetente/destinatário nas mensagens
 - Frontend integrado no dashboard com atualização em tempo real
-
 
 ## Inteligência de projetos
 - Score calculado dinamicamente com base em MRR, múltiplo de preço e completude do anúncio

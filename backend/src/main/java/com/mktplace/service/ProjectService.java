@@ -3,10 +3,14 @@ package com.mktplace.service;
 import com.mktplace.dto.AuthDtos.ProjectRequest;
 import com.mktplace.dto.AuthDtos.ProjectResponse;
 import com.mktplace.enums.ProjectStatus;
+import com.mktplace.events.ProjectLifecycleEvent;
 import com.mktplace.exception.BusinessException;
+import com.mktplace.messaging.MarketplaceEventPublisher;
 import com.mktplace.model.Project;
 import com.mktplace.model.User;
 import com.mktplace.repository.ProjectRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -24,15 +28,18 @@ public class ProjectService {
     private final AuditService auditService;
     private final FraudPreventionService fraudPreventionService;
     private final ProjectIntelligenceService projectIntelligenceService;
+    private final MarketplaceEventPublisher eventPublisher;
 
-    public ProjectService(ProjectRepository projectRepository, SubscriptionService subscriptionService, AuditService auditService, FraudPreventionService fraudPreventionService, ProjectIntelligenceService projectIntelligenceService) {
+    public ProjectService(ProjectRepository projectRepository, SubscriptionService subscriptionService, AuditService auditService, FraudPreventionService fraudPreventionService, ProjectIntelligenceService projectIntelligenceService, MarketplaceEventPublisher eventPublisher) {
         this.projectRepository = projectRepository;
         this.subscriptionService = subscriptionService;
         this.auditService = auditService;
         this.fraudPreventionService = fraudPreventionService;
         this.projectIntelligenceService = projectIntelligenceService;
+        this.eventPublisher = eventPublisher;
     }
 
+    @CacheEvict(cacheNames = {"publicProjects", "topRankedProjects"}, allEntries = true)
     public ProjectResponse create(User user, ProjectRequest request) {
         subscriptionService.assertCanPublish(user);
         Project project = Project.builder()
@@ -50,27 +57,31 @@ public class ProjectService {
         fraudPreventionService.validateProjectListing(project);
         project = projectRepository.save(project);
         auditService.logAction("PROJECT_CREATED", "PROJECT", String.valueOf(project.getId()), project.getTitle());
-        return toResponse(project, null, null);
+        eventPublisher.publish(new ProjectLifecycleEvent(project.getId(), user.getId(), "CREATED", project.getTitle()), "integration");
+        return toResponse(project, null);
     }
 
+    @Cacheable(cacheNames = "publicProjects", key = "T(String).valueOf(#rawSearch).concat('|').concat(T(String).valueOf(#rawCity)).concat('|').concat(T(String).valueOf(#rawState))")
     public List<ProjectResponse> publicList(String rawSearch, String rawCity, String rawState) {
         String searchTerm = search(rawSearch);
         String city = clean(rawCity);
         String state = clean(rawState);
         List<Project> ranked = projectIntelligenceService.rank(projectRepository.searchPublicProjects(searchTerm, city, state).stream().filter(project -> subscriptionService.canPublish(project.getSeller())).toList());
         List<ProjectResponse> response = new ArrayList<>();
-        for (int i = 0; i < ranked.size(); i++) response.add(toResponse(ranked.get(i), i + 1, ranked.size()));
+        for (int i = 0; i < ranked.size(); i++) response.add(toResponse(ranked.get(i), i + 1));
         return response;
     }
 
+    @Cacheable(cacheNames = "topRankedProjects", key = "'top10'")
     public List<ProjectResponse> topRanked() {
         return publicList(null, null, null).stream().limit(10).toList();
     }
 
     public List<ProjectResponse> myProjects(User user) {
-        return projectRepository.findBySeller(user).stream().map(project -> toResponse(project, null, null)).toList();
+        return projectRepository.findBySeller(user).stream().map(project -> toResponse(project, null)).toList();
     }
 
+    @CacheEvict(cacheNames = {"publicProjects", "topRankedProjects"}, allEntries = true)
     public ProjectResponse update(User user, Long id, ProjectRequest request) {
         Project project = getOwnedProject(user, id);
         subscriptionService.assertCanPublish(user);
@@ -85,23 +96,28 @@ public class ProjectService {
         fraudPreventionService.validateProjectListing(project);
         Project saved = projectRepository.save(project);
         auditService.logAction("PROJECT_UPDATED", "PROJECT", String.valueOf(saved.getId()), saved.getTitle());
-        return toResponse(saved, null, null);
+        eventPublisher.publish(new ProjectLifecycleEvent(saved.getId(), user.getId(), "UPDATED", saved.getTitle()), "integration");
+        return toResponse(saved, null);
     }
 
+    @CacheEvict(cacheNames = {"publicProjects", "topRankedProjects"}, allEntries = true)
     public void delete(User user, Long id) {
         Project project = getOwnedProject(user, id);
         projectRepository.delete(project);
         auditService.logAction("PROJECT_DELETED", "PROJECT", String.valueOf(project.getId()), project.getTitle());
+        eventPublisher.publish(new ProjectLifecycleEvent(project.getId(), user.getId(), "DELETED", project.getTitle()), "integration");
     }
 
     public Project getEntity(Long id) {
         return projectRepository.findById(id).orElseThrow(() -> new BusinessException("Projeto não encontrado", HttpStatus.NOT_FOUND));
     }
 
+    @CacheEvict(cacheNames = {"publicProjects", "topRankedProjects"}, allEntries = true)
     public void markAsSold(Project project) {
         project.setStatus(ProjectStatus.SOLD);
         project.setUpdatedAt(Instant.now());
         projectRepository.save(project);
+        eventPublisher.publish(new ProjectLifecycleEvent(project.getId(), project.getSeller().getId(), "SOLD", project.getTitle()), "integration");
     }
 
     private Project getOwnedProject(User user, Long id) {
@@ -110,7 +126,7 @@ public class ProjectService {
         return project;
     }
 
-    public ProjectResponse toResponse(Project project, Integer ranking, Integer ignored) {
+    public ProjectResponse toResponse(Project project, Integer ranking) {
         return new ProjectResponse(project.getId(), project.getTitle(), project.getDescription(), project.getCategory(), project.getTechStack(), project.getPrice(), project.getMonthlyRevenue(), project.getStatus().name(), project.getSeller().getId(), project.getSeller().getName(), project.getSeller().getCity(), project.getSeller().getState(), projectIntelligenceService.score(project), ranking, projectIntelligenceService.suggestedPrice(project), projectIntelligenceService.suspicious(project));
     }
 }

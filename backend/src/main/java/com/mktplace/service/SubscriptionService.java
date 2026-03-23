@@ -3,13 +3,17 @@ package com.mktplace.service;
 import com.mktplace.dto.AuthDtos.SubscriptionResponse;
 import com.mktplace.dto.AuthDtos.SubscriptionWebhookRequest;
 import com.mktplace.enums.SubscriptionStatus;
+import com.mktplace.events.SubscriptionLifecycleEvent;
 import com.mktplace.exception.BusinessException;
+import com.mktplace.messaging.MarketplaceEventPublisher;
 import com.mktplace.model.Subscription;
 import com.mktplace.model.User;
 import com.mktplace.repository.ProjectRepository;
 import com.mktplace.repository.SubscriptionRepository;
 import com.mktplace.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -26,12 +30,14 @@ public class SubscriptionService {
     private final BigDecimal planPrice;
     private final int durationDays;
     private final AuditService auditService;
+    private final MarketplaceEventPublisher eventPublisher;
 
-    public SubscriptionService(SubscriptionRepository subscriptionRepository, ProjectRepository projectRepository, UserRepository userRepository, AuditService auditService, @Value("${app.subscription.plan-price}") BigDecimal planPrice, @Value("${app.subscription.duration-days}") int durationDays) {
+    public SubscriptionService(SubscriptionRepository subscriptionRepository, ProjectRepository projectRepository, UserRepository userRepository, AuditService auditService, MarketplaceEventPublisher eventPublisher, @Value("${app.subscription.plan-price}") BigDecimal planPrice, @Value("${app.subscription.duration-days}") int durationDays) {
         this.subscriptionRepository = subscriptionRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.auditService = auditService;
+        this.eventPublisher = eventPublisher;
         this.planPrice = planPrice;
         this.durationDays = durationDays;
     }
@@ -41,6 +47,7 @@ public class SubscriptionService {
         return subscription == null ? new SubscriptionResponse(SubscriptionStatus.CANCELED.name(), null, planPrice, false, false, null) : toResponse(subscription, user);
     }
 
+    @CacheEvict(cacheNames = {"subscriptionStatus", "publicProjects", "topRankedProjects"}, allEntries = true)
     public SubscriptionResponse activateMockSubscription(User user) {
         Subscription subscription = subscriptionRepository.findByUser(user).orElse(Subscription.builder().user(user).build());
         subscription.setStatus(SubscriptionStatus.ACTIVE);
@@ -53,9 +60,11 @@ public class SubscriptionService {
         subscription.setExternalReference(subscription.getExternalReference() == null ? UUID.randomUUID().toString() : subscription.getExternalReference());
         subscriptionRepository.save(subscription);
         auditService.logAction("SUBSCRIPTION_ACTIVATED", "SUBSCRIPTION", String.valueOf(subscription.getId()), user.getEmail());
+        publishEvent(subscription, "ACTIVATED");
         return toResponse(subscription, user);
     }
 
+    @CacheEvict(cacheNames = {"subscriptionStatus", "publicProjects", "topRankedProjects"}, allEntries = true)
     public SubscriptionResponse cancel(User user) {
         Subscription subscription = subscriptionRepository.findByUser(user).orElseThrow(() -> new BusinessException("Assinatura não encontrada", HttpStatus.NOT_FOUND));
         subscription.setStatus(SubscriptionStatus.CANCELED);
@@ -65,9 +74,11 @@ public class SubscriptionService {
         subscriptionRepository.save(subscription);
         hideProjects(user);
         auditService.logAction("SUBSCRIPTION_CANCELED", "SUBSCRIPTION", String.valueOf(subscription.getId()), user.getEmail());
+        publishEvent(subscription, "CANCELED");
         return toResponse(subscription, user);
     }
 
+    @CacheEvict(cacheNames = {"subscriptionStatus", "publicProjects", "topRankedProjects"}, allEntries = true)
     public SubscriptionResponse renewNow(User user) {
         Subscription subscription = subscriptionRepository.findByUser(user).orElseThrow(() -> new BusinessException("Assinatura não encontrada", HttpStatus.NOT_FOUND));
         subscription.setStatus(SubscriptionStatus.ACTIVE);
@@ -79,9 +90,11 @@ public class SubscriptionService {
         subscription.setPrice(planPrice);
         subscriptionRepository.save(subscription);
         auditService.logAction("SUBSCRIPTION_RENEWED", "SUBSCRIPTION", String.valueOf(subscription.getId()), user.getEmail());
+        publishEvent(subscription, "RENEWED");
         return toResponse(subscription, user);
     }
 
+    @CacheEvict(cacheNames = {"subscriptionStatus", "publicProjects", "topRankedProjects"}, allEntries = true)
     public void handleWebhook(SubscriptionWebhookRequest request) {
         Subscription subscription = resolveSubscription(request);
         switch (request.eventType()) {
@@ -103,8 +116,10 @@ public class SubscriptionService {
         subscriptionRepository.save(subscription);
         if (subscription.getStatus() != SubscriptionStatus.ACTIVE) hideProjects(subscription.getUser());
         auditService.logAction("SUBSCRIPTION_WEBHOOK_" + request.eventType(), "SUBSCRIPTION", String.valueOf(subscription.getId()), request.externalReference());
+        publishEvent(subscription, request.eventType());
     }
 
+    @Cacheable(cacheNames = "subscriptionStatus", key = "#user.id")
     public boolean canPublish(User user) {
         Subscription subscription = syncSubscription(user);
         return subscription != null && subscription.getStatus() == SubscriptionStatus.ACTIVE && subscription.getExpiresAt() != null && subscription.getExpiresAt().isAfter(Instant.now());
@@ -125,12 +140,14 @@ public class SubscriptionService {
                 subscription.setUpdatedAt(Instant.now());
                 subscriptionRepository.save(subscription);
                 auditService.logAction("SUBSCRIPTION_AUTO_RENEWED", "SUBSCRIPTION", String.valueOf(subscription.getId()), user.getEmail());
+                publishEvent(subscription, "AUTO_RENEWED");
             } else if (subscription.getStatus() == SubscriptionStatus.ACTIVE) {
                 subscription.setStatus(SubscriptionStatus.PAST_DUE);
                 subscription.setUpdatedAt(Instant.now());
                 subscriptionRepository.save(subscription);
                 auditService.logAction("SUBSCRIPTION_PAST_DUE", "SUBSCRIPTION", String.valueOf(subscription.getId()), user.getEmail());
                 hideProjects(user);
+                publishEvent(subscription, "PAST_DUE");
             }
         }
         return subscription;
@@ -154,5 +171,9 @@ public class SubscriptionService {
             project.setStatus(com.mktplace.enums.ProjectStatus.HIDDEN);
             projectRepository.save(project);
         });
+    }
+
+    private void publishEvent(Subscription subscription, String action) {
+        eventPublisher.publish(new SubscriptionLifecycleEvent(subscription.getId(), subscription.getUser().getId(), action, subscription.getStatus().name(), subscription.getStatus() == SubscriptionStatus.ACTIVE), "audit");
     }
 }

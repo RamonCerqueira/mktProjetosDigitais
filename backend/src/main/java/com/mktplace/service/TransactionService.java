@@ -4,7 +4,9 @@ import com.mktplace.dto.AuthDtos.TransactionResponse;
 import com.mktplace.dto.AuthDtos.TransactionWebhookRequest;
 import com.mktplace.enums.ProjectStatus;
 import com.mktplace.enums.TransactionStatus;
+import com.mktplace.events.TransactionLifecycleEvent;
 import com.mktplace.exception.BusinessException;
+import com.mktplace.messaging.MarketplaceEventPublisher;
 import com.mktplace.model.Transaction;
 import com.mktplace.model.User;
 import com.mktplace.repository.TransactionRepository;
@@ -22,13 +24,15 @@ public class TransactionService {
     private final FraudPreventionService fraudPreventionService;
     private final AuditService auditService;
     private final StripeService stripeService;
+    private final MarketplaceEventPublisher eventPublisher;
 
-    public TransactionService(ProjectService projectService, TransactionRepository transactionRepository, FraudPreventionService fraudPreventionService, AuditService auditService, StripeService stripeService) {
+    public TransactionService(ProjectService projectService, TransactionRepository transactionRepository, FraudPreventionService fraudPreventionService, AuditService auditService, StripeService stripeService, MarketplaceEventPublisher eventPublisher) {
         this.projectService = projectService;
         this.transactionRepository = transactionRepository;
         this.fraudPreventionService = fraudPreventionService;
         this.auditService = auditService;
         this.stripeService = stripeService;
+        this.eventPublisher = eventPublisher;
     }
 
     public TransactionResponse purchase(User buyer, Long projectId) {
@@ -53,6 +57,7 @@ public class TransactionService {
         tx.setStripePaymentIntentId(checkout.paymentIntentId());
         transactionRepository.save(tx);
         auditService.logAction("TRANSACTION_CHECKOUT_CREATED", "TRANSACTION", String.valueOf(tx.getId()), "project=" + projectId);
+        eventPublisher.publish(new TransactionLifecycleEvent(tx.getId(), projectId, buyer.getId(), project.getSeller().getId(), "CHECKOUT_CREATED", tx.getAmount(), tx.getStatus().name()), "integration");
         return toResponse(tx, checkout.checkoutUrl());
     }
 
@@ -67,6 +72,7 @@ public class TransactionService {
         transactionRepository.save(tx);
         projectService.markAsSold(tx.getProject());
         auditService.logAction("TRANSACTION_RELEASED", "TRANSACTION", String.valueOf(tx.getId()), tx.getStripePaymentIntentId());
+        eventPublisher.publish(new TransactionLifecycleEvent(tx.getId(), tx.getProject().getId(), tx.getBuyer().getId(), tx.getSeller().getId(), "RELEASED", tx.getAmount(), tx.getStatus().name()), "integration");
         return toResponse(tx, null);
     }
 
@@ -79,6 +85,7 @@ public class TransactionService {
         tx.setUpdatedAt(Instant.now());
         transactionRepository.save(tx);
         auditService.logAction("TRANSACTION_REFUNDED", "TRANSACTION", String.valueOf(tx.getId()), tx.getStripePaymentIntentId());
+        eventPublisher.publish(new TransactionLifecycleEvent(tx.getId(), tx.getProject().getId(), tx.getBuyer().getId(), tx.getSeller().getId(), "REFUNDED", tx.getAmount(), tx.getStatus().name()), "integration");
         return toResponse(tx, null);
     }
 
@@ -95,6 +102,7 @@ public class TransactionService {
         if (tx.getStatus() == TransactionStatus.REFUNDED) tx.setRefundedAt(Instant.now());
         transactionRepository.save(tx);
         auditService.logAction("TRANSACTION_WEBHOOK_" + request.eventType(), "TRANSACTION", String.valueOf(tx.getId()), tx.getStripePaymentIntentId());
+        eventPublisher.publish(new TransactionLifecycleEvent(tx.getId(), tx.getProject().getId(), tx.getBuyer().getId(), tx.getSeller().getId(), request.eventType(), tx.getAmount(), tx.getStatus().name()), "integration");
     }
 
     public boolean validateStripeSignature(String payload, String signature) {
