@@ -1,0 +1,72 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/marketplace}
+    username: ${SPRING_DATASOURCE_USERNAME:marketplace}
+    password: ${SPRING_DATASOURCE_PASSWORD:marketplace}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      timeout: 2s
+  cache:
+    type: redis
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        default-requeue-rejected: false
+  mvc:
+    problemdetails:
+      enabled: true
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET:super-secret-key-super-secret-key-super-secret-key}
+    access-expiration-ms: ${APP_JWT_ACCESS_EXPIRATION_MS:3600000}
+    refresh-expiration-ms: ${APP_JWT_REFRESH_EXPIRATION_MS:2592000000}
+  subscription:
+    plan-price: ${APP_SUBSCRIPTION_PLAN_PRICE:9.99}
+    duration-days: ${APP_SUBSCRIPTION_DURATION_DAYS:30}
+  stripe:
+    secret-key: ${APP_STRIPE_SECRET_KEY:}
+    webhook-secret: ${APP_STRIPE_WEBHOOK_SECRET:}
+    success-url: ${APP_STRIPE_SUCCESS_URL:http://localhost:3000/dashboard}
+    cancel-url: ${APP_STRIPE_CANCEL_URL:http://localhost:3000/projects}
+  events:
+    enabled: ${APP_EVENTS_ENABLED:true}
+server:
+  servlet:
+    context-path: /api
+logging:
+  level:
+    org.springframework.security: INFO
+    com.mktplace: INFO
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  tracing:
+    enabled: false
+
+springdoc:
+  api-docs:
+    path: /docs/api
+  swagger-ui:
+    path: /docs/swagger
