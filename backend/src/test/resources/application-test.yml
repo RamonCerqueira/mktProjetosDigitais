@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:marketplace;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+  cache:
+    type: simple
+  rabbitmq:
+    listener:
+      simple:
+        auto-startup: false
+  data:
+    redis:
+      repositories:
+        enabled: false
+app:
+  jwt:
+    secret: super-secret-key-super-secret-key-super-secret-key
+    access-expiration-ms: 60000
+    refresh-expiration-ms: 120000
