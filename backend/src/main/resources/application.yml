@@ -22,7 +22,7 @@ app:
     access-expiration-ms: 3600000
     refresh-expiration-ms: 2592000000
   subscription:
-    plan-price: 9.90
+    plan-price: 9.99
     duration-days: 30
 server:
   servlet:

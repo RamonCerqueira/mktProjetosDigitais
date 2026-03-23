@@ -15,7 +15,8 @@ public class AuthDtos {
     public record AuthResponse(String accessToken, String refreshToken, UserResponse user) {}
     public record RefreshRequest(String refreshToken) {}
     public record UserResponse(Long id, String name, String email, Role role, DocumentType documentType, String documentNumber, String postalCode, String street, String streetNumber, String complement, String neighborhood, String city, String state, String companyName, Double latitude, Double longitude) {}
-    public record SubscriptionResponse(String status, Instant expiresAt, BigDecimal price, boolean canPublish) {}
+    public record SubscriptionResponse(String status, Instant expiresAt, BigDecimal price, boolean canPublish, boolean autoRenew, String externalReference) {}
+    public record SubscriptionWebhookRequest(String eventType, Long userId, String externalReference) {}
     public record ProjectRequest(String title, String description, String category, String techStack, BigDecimal price, BigDecimal monthlyRevenue) {}
     public record ProjectResponse(Long id, String title, String description, String category, String techStack, BigDecimal price, BigDecimal monthlyRevenue, String status, Long sellerId, String sellerName, String sellerCity, String sellerState) {}
     public record OfferRequest(Long projectId, BigDecimal amount) {}

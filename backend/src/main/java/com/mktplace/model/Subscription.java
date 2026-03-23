@@ -20,4 +20,7 @@ public class Subscription {
     private Instant startedAt;
     private Instant expiresAt;
     private Instant updatedAt;
+    private Instant canceledAt;
+    private boolean autoRenew;
+    private String externalReference;
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const benefits = [
-  "Assinatura única de R$ 9,90/mês para sellers publicarem projetos.",
+  "Assinatura única de R$ 9,99/mês para sellers publicarem projetos.",
   "Marketplace público com busca, filtros e favoritos.",
   "Negociação com ofertas e chat em tempo real via WebSocket.",
   "Comissão automática nas vendas para monetização da plataforma.",
