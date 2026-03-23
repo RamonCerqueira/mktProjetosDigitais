@@ -46,6 +46,12 @@ app:
     cancel-url: ${APP_STRIPE_CANCEL_URL:http://localhost:3000/projects}
   events:
     enabled: ${APP_EVENTS_ENABLED:true}
+  admin:
+    bootstrap-enabled: ${APP_ADMIN_BOOTSTRAP_ENABLED:true}
+    name: ${APP_ADMIN_NAME:Admin Master}
+    email: ${APP_ADMIN_EMAIL:admin@marketplace.local}
+    password: ${APP_ADMIN_PASSWORD:Admin123!}
+    document-number: ${APP_ADMIN_DOCUMENT_NUMBER:11144477735}
 server:
   servlet:
     context-path: /api

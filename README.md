@@ -61,3 +61,60 @@ docker compose --env-file .env up --build
 - Termos de uso: `/terms`
 - Política de privacidade: `/privacy`
 - Regras do marketplace: `/marketplace-rules`
+
+
+## Login ADMIN inicial
+- Rota do frontend: `/login`
+- Endpoint do backend: `POST /api/auth/login`
+- Credenciais iniciais padrão (configuráveis por variável de ambiente):
+  - Email: `admin@marketplace.local`
+  - Senha: `Admin123!`
+- Essas credenciais são semeadas automaticamente no startup quando `APP_ADMIN_BOOTSTRAP_ENABLED=true`.
+
+## Como inserir outros ADMINs
+### Opção 1: pela própria área admin
+- Faça login com o ADMIN inicial.
+- Acesse `/admin`.
+- Abra o detalhe de um usuário existente.
+- Use a ação **Tornar ADMIN**.
+
+### Opção 2: diretamente no PostgreSQL
+#### Inserir um novo ADMIN
+```sql
+INSERT INTO users (
+  name, email, document_number, document_type, password, role, city, state, created_at, active, blocked
+) VALUES (
+  'Novo Admin',
+  'novo.admin@marketplace.local',
+  '98765432100',
+  'CPF',
+  '$2a$10$wHcM4YWwYpV7t5fV0YzGQONnJm2p0Y9GmH0KQnJYyK6zA0xq0G4tK',
+  'ADMIN',
+  'São Paulo',
+  'SP',
+  NOW(),
+  TRUE,
+  FALSE
+);
+
+INSERT INTO user_roles (user_id, role_name)
+SELECT id, 'ADMIN' FROM users WHERE email = 'novo.admin@marketplace.local';
+```
+
+#### Promover um usuário existente para ADMIN
+```sql
+UPDATE users
+SET role = 'ADMIN'
+WHERE email = 'usuario@exemplo.com';
+
+INSERT INTO user_roles (user_id, role_name)
+SELECT id, 'ADMIN'
+FROM users
+WHERE email = 'usuario@exemplo.com'
+  AND NOT EXISTS (
+    SELECT 1 FROM user_roles ur
+    WHERE ur.user_id = users.id AND ur.role_name = 'ADMIN'
+  );
+```
+
+> Observação: a senha armazenada no banco precisa estar em BCrypt. O hash acima é apenas um exemplo de valor já criptografado.
