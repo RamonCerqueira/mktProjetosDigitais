@@ -18,7 +18,7 @@ public class AuthDtos {
     public record SubscriptionResponse(String status, Instant expiresAt, BigDecimal price, boolean canPublish, boolean autoRenew, String externalReference) {}
     public record SubscriptionWebhookRequest(String eventType, Long userId, String externalReference) {}
     public record ProjectRequest(String title, String description, String category, String techStack, BigDecimal price, BigDecimal monthlyRevenue) {}
-    public record ProjectResponse(Long id, String title, String description, String category, String techStack, BigDecimal price, BigDecimal monthlyRevenue, String status, Long sellerId, String sellerName, String sellerCity, String sellerState) {}
+    public record ProjectResponse(Long id, String title, String description, String category, String techStack, BigDecimal price, BigDecimal monthlyRevenue, String status, Long sellerId, String sellerName, String sellerCity, String sellerState, Integer score, Integer ranking, BigDecimal suggestedPrice, boolean suspicious) {}
     public record OfferRequest(Long projectId, BigDecimal amount) {}
     public record CounterOfferRequest(Long offerId, BigDecimal amount) {}
     public record OfferResponse(Long id, Long projectId, BigDecimal amount, String status, Long buyerId, String buyerName, Long sellerId, String sellerName, Long proposerId, Long parentOfferId, String negotiationKey) {}

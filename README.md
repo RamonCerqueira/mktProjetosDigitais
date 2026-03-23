@@ -85,3 +85,10 @@ npm run dev
 - Histórico completo por negociação
 - Identificação de remetente/destinatário nas mensagens
 - Frontend integrado no dashboard com atualização em tempo real
+
+
+## Inteligência de projetos
+- Score calculado dinamicamente com base em MRR, múltiplo de preço e completude do anúncio
+- Ranking público ordenado por score
+- Sugestão de preço automática baseada em múltiplo de receita
+- Heurística antifraude que bloqueia anúncios com preço muito fora da faixa sugerida

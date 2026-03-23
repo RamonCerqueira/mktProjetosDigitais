@@ -18,6 +18,9 @@ public class ProjectController {
     @GetMapping("/marketplace/projects")
     public List<ProjectResponse> listPublic(@RequestParam(required = false) String search, @RequestParam(required = false) String city, @RequestParam(required = false) String state) { return projectService.publicList(search, city, state); }
 
+    @GetMapping("/marketplace/projects/ranking")
+    public List<ProjectResponse> ranking() { return projectService.topRanked(); }
+
     @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
     @GetMapping("/projects/me")
     public List<ProjectResponse> myProjects() { return projectService.myProjects(userContextService.getCurrentUser()); }

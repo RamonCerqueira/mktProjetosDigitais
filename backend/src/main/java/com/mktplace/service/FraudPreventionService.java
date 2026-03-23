@@ -13,6 +13,11 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class FraudPreventionService {
     private final Map<String, Integer> offerAttempts = new ConcurrentHashMap<>();
+    private final ProjectIntelligenceService projectIntelligenceService;
+
+    public FraudPreventionService(ProjectIntelligenceService projectIntelligenceService) {
+        this.projectIntelligenceService = projectIntelligenceService;
+    }
 
     public void validateOffer(User buyer, Project project, BigDecimal amount) {
         if (project.getSeller().getId().equals(buyer.getId())) throw new BusinessException("O seller não pode negociar o próprio projeto como comprador", HttpStatus.BAD_REQUEST);
@@ -25,5 +30,9 @@ public class FraudPreventionService {
 
     public void validatePurchase(User buyer, Project project) {
         if (project.getSeller().getId().equals(buyer.getId())) throw new BusinessException("Compra antifraude bloqueada para o próprio seller", HttpStatus.BAD_REQUEST);
+    }
+
+    public void validateProjectListing(Project project) {
+        if (projectIntelligenceService.suspicious(project)) throw new BusinessException("Projeto bloqueado pela heurística antifraude de preço", HttpStatus.BAD_REQUEST);
     }
 }

@@ -21,7 +21,7 @@ export interface User {
 }
 export interface AuthResponse { accessToken: string; refreshToken: string; user: User; }
 export interface Subscription { status: SubscriptionStatus; expiresAt: string | null; price: number; canPublish: boolean; autoRenew: boolean; externalReference: string | null; }
-export interface Project { id: number; title: string; description: string; category: string; techStack: string; price: number; monthlyRevenue: number; status: string; sellerId: number; sellerName: string; sellerCity?: string; sellerState?: string; }
+export interface Project { id: number; title: string; description: string; category: string; techStack: string; price: number; monthlyRevenue: number; status: string; sellerId: number; sellerName: string; sellerCity?: string; sellerState?: string; score?: number; ranking?: number | null; suggestedPrice?: number | null; suspicious?: boolean; }
 export interface Offer { id: number; projectId: number; amount: number; status: string; buyerId: number; buyerName: string; sellerId: number; sellerName: string; proposerId: number; parentOfferId?: number | null; negotiationKey: string; }
 export interface Dashboard { user: User; subscription: Subscription; myProjects: Project[]; offers: Offer[]; }
 export interface CepLookup { cep: string; street: string; complement: string; neighborhood: string; city: string; state: string; }
