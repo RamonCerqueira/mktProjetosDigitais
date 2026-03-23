@@ -1,5 +1,6 @@
 package com.mktplace.config;
 
+import com.mktplace.observability.TraceContextFilter;
 import com.mktplace.security.AuditLoggingFilter;
 import com.mktplace.security.CsrfCookieFilter;
 import com.mktplace.security.JwtAuthenticationFilter;
@@ -26,7 +27,7 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 @EnableMethodSecurity
 public class SecurityConfig {
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter, RateLimitingFilter rateLimitingFilter, AuditLoggingFilter auditLoggingFilter, CsrfCookieFilter csrfCookieFilter, AuthenticationProvider authProvider) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, TraceContextFilter traceContextFilter, JwtAuthenticationFilter jwtFilter, RateLimitingFilter rateLimitingFilter, AuditLoggingFilter auditLoggingFilter, CsrfCookieFilter csrfCookieFilter, AuthenticationProvider authProvider) throws Exception {
         return http
                 .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .ignoringRequestMatchers("/auth/**", "/marketplace/**", "/ws/**"))
@@ -46,7 +47,8 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authProvider)
-                .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(traceContextFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(rateLimitingFilter, TraceContextFilter.class)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(csrfCookieFilter, JwtAuthenticationFilter.class)
                 .addFilterAfter(auditLoggingFilter, CsrfCookieFilter.class)

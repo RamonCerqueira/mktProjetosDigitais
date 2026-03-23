@@ -6,3 +6,9 @@ frontend/node_modules/
 .DS_Store
 
 backend/.gradle/
+
+backend/target/
+frontend/coverage/
+.env.local
+backend/.env
+frontend/.env

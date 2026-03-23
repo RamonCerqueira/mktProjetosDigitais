@@ -1,4 +1,5 @@
 import "./globals.css";
+import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 
 export const metadata = { title: "MicroSaaS Market", description: "Marketplace de projetos digitais monetizado por assinatura" };
@@ -9,6 +10,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <Header />
         {children}
+        <Footer />
       </body>
     </html>
   );
