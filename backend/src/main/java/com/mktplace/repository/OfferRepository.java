@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface OfferRepository extends JpaRepository<Offer, Long> {
     List<Offer> findByBuyerIdOrSellerId(Long buyerId, Long sellerId);
+    List<Offer> findByNegotiationKeyOrderByCreatedAtAsc(String negotiationKey);
 }

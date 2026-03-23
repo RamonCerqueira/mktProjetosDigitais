@@ -69,3 +69,12 @@ npm run dev
 - Escrow: após pagamento confirmado pelo Stripe, a transação fica em `HELD` até a confirmação do comprador
 - Stripe: criação de checkout e webhook com validação de assinatura
 - Refund e liberação de escrow auditados no backend
+
+
+## Sistema de negociação
+- Propostas formais com status e proponente identificado
+- Contra-propostas encadeadas por negociação (`negotiationKey`)
+- Aceite/rejeição apenas pela contraparte
+- Histórico completo de ações (`created`, `countered`, `accepted`, `rejected`, `message_sent`)
+- Chat integrado por negociação com validação de participantes
+- Logs de auditoria e bloqueios contra manipulação de ofertas fechadas ou por usuários não autorizados
