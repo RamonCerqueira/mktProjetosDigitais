@@ -21,10 +21,10 @@ public class AuthDtos {
     public record ProjectResponse(Long id, String title, String description, String category, String techStack, BigDecimal price, BigDecimal monthlyRevenue, String status, Long sellerId, String sellerName, String sellerCity, String sellerState) {}
     public record OfferRequest(Long projectId, BigDecimal amount) {}
     public record CounterOfferRequest(Long offerId, BigDecimal amount) {}
-    public record OfferResponse(Long id, Long projectId, BigDecimal amount, String status, Long buyerId, Long sellerId, Long proposerId, Long parentOfferId, String negotiationKey) {}
+    public record OfferResponse(Long id, Long projectId, BigDecimal amount, String status, Long buyerId, String buyerName, Long sellerId, String sellerName, Long proposerId, Long parentOfferId, String negotiationKey) {}
     public record OfferHistoryResponse(Long id, Long offerId, Long actorId, String actionType, BigDecimal amount, String details, Instant createdAt) {}
     public record MessageRequest(Long offerId, Long receiverId, String content) {}
-    public record MessageResponse(Long id, Long offerId, Long senderId, Long receiverId, String content, Instant createdAt) {}
+    public record MessageResponse(Long id, Long offerId, String negotiationKey, Long senderId, String senderName, Long receiverId, String receiverName, String content, Instant createdAt) {}
     public record TransactionResponse(Long id, Long projectId, BigDecimal amount, BigDecimal platformFee, BigDecimal sellerNetAmount, String status, String checkoutUrl, String paymentIntentId) {}
     public record TransactionWebhookRequest(String eventType, String sessionId, String paymentIntentId) {}
     public record DashboardResponse(UserResponse user, SubscriptionResponse subscription, List<ProjectResponse> myProjects, List<OfferResponse> offers) {}

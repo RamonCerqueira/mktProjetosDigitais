@@ -78,3 +78,10 @@ npm run dev
 - Histórico completo de ações (`created`, `countered`, `accepted`, `rejected`, `message_sent`)
 - Chat integrado por negociação com validação de participantes
 - Logs de auditoria e bloqueios contra manipulação de ofertas fechadas ou por usuários não autorizados
+
+
+## Chat em tempo real
+- WebSocket/STOMP no backend com persistência de mensagens
+- Histórico completo por negociação
+- Identificação de remetente/destinatário nas mensagens
+- Frontend integrado no dashboard com atualização em tempo real

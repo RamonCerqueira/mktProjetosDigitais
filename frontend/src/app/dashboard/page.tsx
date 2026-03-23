@@ -1,5 +1,6 @@
 "use client";
 import api from "@/lib/api";
+import { ChatPanel } from "@/components/ChatPanel";
 import { Dashboard } from "@/types";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -27,6 +28,7 @@ export default function DashboardPage() {
         <div className="card space-y-3"><h2 className="text-2xl font-semibold">Novo projeto</h2>{["title","description","category","techStack","price","monthlyRevenue"].map((field) => <input key={field} className="input" placeholder={field} value={(form as any)[field]} onChange={(e) => setForm({ ...form, [field]: ["price","monthlyRevenue"].includes(field) ? Number(e.target.value) : e.target.value })} />)}{error && <p className="text-red-400">{error}</p>}<button className="btn-primary" onClick={createProject}>Publicar</button></div>
         <div className="card"><h2 className="mb-4 text-2xl font-semibold">Meus projetos</h2><div className="space-y-4">{dashboard.myProjects.map((project) => <div key={project.id} className="rounded-xl border border-slate-800 p-4"><div className="flex items-center justify-between"><h3 className="font-semibold">{project.title}</h3><span className="text-sm text-emerald-300">{project.status}</span></div><p className="mt-2 text-sm text-slate-300">{project.description}</p></div>)}{dashboard.myProjects.length === 0 && <p className="text-slate-400">Nenhum projeto cadastrado ainda.</p>}</div></div>
       </section>
+      <ChatPanel offers={dashboard.offers} currentUserId={dashboard.user.id} />
     </main>
   );
 }

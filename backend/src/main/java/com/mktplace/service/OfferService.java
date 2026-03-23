@@ -113,7 +113,7 @@ public class OfferService {
         if (!offer.getBuyer().getId().equals(receiver.getId()) && !offer.getSeller().getId().equals(receiver.getId())) throw new BusinessException("Destinatário inválido para esta negociação", HttpStatus.BAD_REQUEST);
         Message message = messageRepository.save(Message.builder().offer(offer).sender(sender).receiver(receiver).content(clean(request.content())).createdAt(Instant.now()).build());
         appendHistory(offer, sender, OfferActionType.MESSAGE_SENT, offer.getAmount(), "Mensagem enviada");
-        MessageResponse response = new MessageResponse(message.getId(), offer.getId(), sender.getId(), receiver.getId(), message.getContent(), message.getCreatedAt());
+        MessageResponse response = new MessageResponse(message.getId(), offer.getId(), offer.getNegotiationKey(), sender.getId(), sender.getName(), receiver.getId(), receiver.getName(), message.getContent(), message.getCreatedAt());
         messagingTemplate.convertAndSend("/topic/offers/" + offer.getNegotiationKey(), response);
         auditService.logAction("MESSAGE_SENT", "OFFER", String.valueOf(offer.getId()), "receiver=" + receiver.getId());
         return response;
@@ -122,7 +122,7 @@ public class OfferService {
     public List<MessageResponse> listMessages(User user, Long offerId) {
         Offer offer = getNegotiationOffer(offerId);
         ensureParticipant(user, offer);
-        return messageRepository.findByNegotiationKeyOrderByCreatedAtAsc(offer.getNegotiationKey()).stream().map(message -> new MessageResponse(message.getId(), offerId, message.getSender().getId(), message.getReceiver().getId(), message.getContent(), message.getCreatedAt())).toList();
+        return messageRepository.findByNegotiationKeyOrderByCreatedAtAsc(offer.getNegotiationKey()).stream().map(message -> new MessageResponse(message.getId(), offerId, offer.getNegotiationKey(), message.getSender().getId(), message.getSender().getName(), message.getReceiver().getId(), message.getReceiver().getName(), message.getContent(), message.getCreatedAt())).toList();
     }
 
     private Offer getNegotiationOffer(Long offerId) {
@@ -142,6 +142,6 @@ public class OfferService {
     }
 
     private OfferResponse toResponse(Offer offer) {
-        return new OfferResponse(offer.getId(), offer.getProject().getId(), offer.getAmount(), offer.getStatus().name(), offer.getBuyer().getId(), offer.getSeller().getId(), offer.getProposer().getId(), offer.getParentOffer() == null ? null : offer.getParentOffer().getId(), offer.getNegotiationKey());
+        return new OfferResponse(offer.getId(), offer.getProject().getId(), offer.getAmount(), offer.getStatus().name(), offer.getBuyer().getId(), offer.getBuyer().getName(), offer.getSeller().getId(), offer.getSeller().getName(), offer.getProposer().getId(), offer.getParentOffer() == null ? null : offer.getParentOffer().getId(), offer.getNegotiationKey());
     }
 }
