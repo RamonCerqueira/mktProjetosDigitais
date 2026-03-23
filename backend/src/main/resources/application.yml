@@ -24,6 +24,11 @@ app:
   subscription:
     plan-price: 9.99
     duration-days: 30
+  stripe:
+    secret-key: ${APP_STRIPE_SECRET_KEY:}
+    webhook-secret: ${APP_STRIPE_WEBHOOK_SECRET:}
+    success-url: ${APP_STRIPE_SUCCESS_URL:http://localhost:3000/dashboard}
+    cancel-url: ${APP_STRIPE_CANCEL_URL:http://localhost:3000/projects}
 server:
   servlet:
     context-path: /api

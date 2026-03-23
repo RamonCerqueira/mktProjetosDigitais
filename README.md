@@ -61,3 +61,11 @@ npm run dev
 - Sistema valida assinatura em cada ação crítica de publicação.
 - Cadastro valida CPF/CNPJ antes de criar conta.
 - Antifraude bloqueia auto-compra, auto-negociação e ofertas excessivamente baixas.
+
+
+## Sistema financeiro
+- Comissão da plataforma de 10% por venda
+- Estados da transação: `PENDING`, `HELD`, `RELEASED`, `REFUNDED`
+- Escrow: após pagamento confirmado pelo Stripe, a transação fica em `HELD` até a confirmação do comprador
+- Stripe: criação de checkout e webhook com validação de assinatura
+- Refund e liberação de escrow auditados no backend

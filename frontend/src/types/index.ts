@@ -28,3 +28,5 @@ export interface CepLookup { cep: string; street: string; complement: string; ne
 export interface CnpjLookup { cnpj: string; companyName: string; tradeName: string; street: string; neighborhood: string; city: string; state: string; postalCode: string; email: string; }
 export interface DocumentValidation { document: string; valid: boolean; type: DocumentType; }
 export interface ReverseGeocode { latitude: number; longitude: number; city: string; state: string; country: string; }
+
+export interface Transaction { id: number; projectId: number; amount: number; platformFee: number; sellerNetAmount: number; status: "PENDING" | "HELD" | "RELEASED" | "REFUNDED"; checkoutUrl?: string | null; paymentIntentId?: string | null; }

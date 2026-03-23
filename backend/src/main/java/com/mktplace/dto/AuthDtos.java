@@ -23,6 +23,7 @@ public class AuthDtos {
     public record OfferResponse(Long id, Long projectId, BigDecimal amount, String status, Long buyerId, Long sellerId) {}
     public record MessageRequest(Long offerId, Long receiverId, String content) {}
     public record MessageResponse(Long id, Long offerId, Long senderId, Long receiverId, String content, Instant createdAt) {}
-    public record TransactionResponse(Long id, Long projectId, BigDecimal amount, BigDecimal platformFee, BigDecimal sellerNetAmount, String status) {}
+    public record TransactionResponse(Long id, Long projectId, BigDecimal amount, BigDecimal platformFee, BigDecimal sellerNetAmount, String status, String checkoutUrl, String paymentIntentId) {}
+    public record TransactionWebhookRequest(String eventType, String sessionId, String paymentIntentId) {}
     public record DashboardResponse(UserResponse user, SubscriptionResponse subscription, List<ProjectResponse> myProjects, List<OfferResponse> offers) {}
 }
