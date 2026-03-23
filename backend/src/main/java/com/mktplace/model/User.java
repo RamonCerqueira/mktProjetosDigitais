@@ -10,7 +10,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+        @Index(name = "idx_users_city_state", columnList = "city,state"),
+        @Index(name = "idx_users_lat_lng", columnList = "latitude,longitude")
+})
 @Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
 public class User {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,6 +42,8 @@ public class User {
     @Column(length = 2)
     private String state;
     private String companyName;
+    private Double latitude;
+    private Double longitude;
     @Column(nullable = false)
     private Instant createdAt;
     @ElementCollection(fetch = FetchType.EAGER)

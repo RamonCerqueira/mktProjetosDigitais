@@ -16,7 +16,7 @@ public class ProjectController {
     public ProjectController(ProjectService projectService, UserContextService userContextService) { this.projectService = projectService; this.userContextService = userContextService; }
 
     @GetMapping("/marketplace/projects")
-    public List<ProjectResponse> listPublic(@RequestParam(required = false) String search) { return projectService.publicList(search); }
+    public List<ProjectResponse> listPublic(@RequestParam(required = false) String search, @RequestParam(required = false) String city, @RequestParam(required = false) String state) { return projectService.publicList(search, city, state); }
 
     @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
     @GetMapping("/projects/me")

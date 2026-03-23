@@ -3,6 +3,7 @@ package com.mktplace.controller;
 import com.mktplace.dto.IntegrationDtos.CepResponse;
 import com.mktplace.dto.IntegrationDtos.CnpjResponse;
 import com.mktplace.dto.IntegrationDtos.DocumentValidationResponse;
+import com.mktplace.dto.IntegrationDtos.ReverseGeocodeResponse;
 import com.mktplace.enums.DocumentType;
 import com.mktplace.service.IntegrationService;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,11 @@ public class IntegrationController {
     @GetMapping("/cnpj/{cnpj}")
     public CnpjResponse lookupCnpj(@PathVariable String cnpj) {
         return integrationService.fetchCompanyByCnpj(cnpj);
+    }
+
+    @GetMapping("/maps/reverse")
+    public ReverseGeocodeResponse reverseGeocode(@RequestParam Double lat, @RequestParam Double lng) {
+        return integrationService.reverseGeocode(lat, lng);
     }
 
     @GetMapping("/validate/{type}/{document}")

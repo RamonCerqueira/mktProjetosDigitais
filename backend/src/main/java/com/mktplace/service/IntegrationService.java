@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mktplace.dto.IntegrationDtos.CepResponse;
 import com.mktplace.dto.IntegrationDtos.CnpjResponse;
 import com.mktplace.dto.IntegrationDtos.DocumentValidationResponse;
+import com.mktplace.dto.IntegrationDtos.ReverseGeocodeResponse;
 import com.mktplace.enums.DocumentType;
 import com.mktplace.exception.BusinessException;
 import org.springframework.http.HttpStatus;
@@ -43,6 +44,15 @@ public class IntegrationService {
         return new CnpjResponse(normalized, node.path("nome").asText(), node.path("fantasia").asText(), node.path("logradouro").asText() + " " + node.path("numero").asText(), node.path("bairro").asText(), node.path("municipio").asText(), node.path("uf").asText(), digits(node.path("cep").asText()), node.path("email").asText());
     }
 
+    public ReverseGeocodeResponse reverseGeocode(Double latitude, Double longitude) {
+        if (latitude == null || longitude == null) throw new BusinessException("Latitude/longitude obrigatórios", HttpStatus.BAD_REQUEST);
+        JsonNode node = getJson("https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=" + latitude + "&lon=" + longitude);
+        JsonNode address = node.path("address");
+        String city = address.path("city").asText(address.path("town").asText(address.path("village").asText()));
+        String state = address.path("state_code").asText(address.path("state").asText());
+        return new ReverseGeocodeResponse(latitude, longitude, city, state, address.path("country").asText());
+    }
+
     public DocumentValidationResponse validateDocument(DocumentType type, String document) {
         String normalized = digits(document);
         boolean valid = (type == DocumentType.CNPJ) ? isValidCnpj(normalized) : isValidCpf(normalized);
@@ -51,7 +61,11 @@ public class IntegrationService {
 
     private JsonNode getJson(String url) {
         try {
-            HttpRequest request = HttpRequest.newBuilder(URI.create(url)).header("Accept", "application/json").GET().build();
+            HttpRequest request = HttpRequest.newBuilder(URI.create(url))
+                    .header("Accept", "application/json")
+                    .header("User-Agent", "mktProjetosDigitais/1.0")
+                    .GET()
+                    .build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() >= 400) throw new BusinessException("Falha na integração externa", HttpStatus.BAD_GATEWAY);
             return objectMapper.readTree(response.body());

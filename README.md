@@ -1,7 +1,7 @@
 # Marketplace de Projetos Digitais
 
 Monorepo organizado em duas pastas principais:
-- `backend/`: API Spring Boot com autenticação, RBAC, assinatura, antifraude, auditoria e integrações externas.
+- `backend/`: API Spring Boot com autenticação, RBAC, assinatura, antifraude, auditoria, geolocalização e integrações externas.
 - `frontend/`: aplicação Next.js com fluxos de cadastro, login, assinatura, dashboard e marketplace público.
 
 ## Stack
@@ -23,9 +23,17 @@ Monorepo organizado em duas pastas principais:
 ## Integrações implementadas
 - ViaCEP: busca de endereço por CEP no backend
 - ReceitaWS: busca de dados empresariais por CNPJ no backend
+- OpenStreetMap/Nominatim: reverse geocoding para converter latitude/longitude em cidade/estado
 - Endpoint público de validação documental (`CPF` e `CNPJ`)
 - Frontend com auto-preenchimento de endereço e razão/nome fantasia durante o cadastro
 - Validação documental em tempo real na tela de registro
+- Marketplace com filtros geográficos e busca com base na localização do usuário
+
+## Geolocalização
+- O frontend solicita autorização explícita ao navegador para acessar a localização do usuário.
+- A localização pode ser usada no cadastro para salvar cidade/UF/latitude/longitude do usuário.
+- O marketplace pode buscar projetos por cidade/UF manualmente ou a partir da geolocalização atual.
+- O backend mantém índices em usuários/projetos para otimizar as queries geográficas por cidade/estado/status.
 
 ## Como rodar com Docker
 ```bash

@@ -46,10 +46,14 @@ public class ProjectService {
         return toResponse(project);
     }
 
-    public List<ProjectResponse> publicList(String rawSearch) {
+    public List<ProjectResponse> publicList(String rawSearch, String rawCity, String rawState) {
         String searchTerm = search(rawSearch);
-        List<Project> projects = (searchTerm == null || searchTerm.isBlank()) ? projectRepository.findByStatus(ProjectStatus.PUBLISHED) : projectRepository.findByStatusAndTitleContainingIgnoreCase(ProjectStatus.PUBLISHED, searchTerm);
-        return projects.stream().filter(project -> subscriptionService.canPublish(project.getSeller())).map(this::toResponse).toList();
+        String city = clean(rawCity);
+        String state = clean(rawState);
+        return projectRepository.searchPublicProjects(searchTerm, city, state).stream()
+                .filter(project -> subscriptionService.canPublish(project.getSeller()))
+                .map(this::toResponse)
+                .toList();
     }
 
     public List<ProjectResponse> myProjects(User user) {
@@ -95,6 +99,6 @@ public class ProjectService {
     }
 
     public ProjectResponse toResponse(Project project) {
-        return new ProjectResponse(project.getId(), project.getTitle(), project.getDescription(), project.getCategory(), project.getTechStack(), project.getPrice(), project.getMonthlyRevenue(), project.getStatus().name(), project.getSeller().getId(), project.getSeller().getName());
+        return new ProjectResponse(project.getId(), project.getTitle(), project.getDescription(), project.getCategory(), project.getTechStack(), project.getPrice(), project.getMonthlyRevenue(), project.getStatus().name(), project.getSeller().getId(), project.getSeller().getName(), project.getSeller().getCity(), project.getSeller().getState());
     }
 }

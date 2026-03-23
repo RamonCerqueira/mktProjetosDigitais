@@ -8,6 +8,10 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
+@Table(indexes = {
+        @Index(name = "idx_project_status_title", columnList = "status,title"),
+        @Index(name = "idx_project_status_category", columnList = "status,category")
+})
 @Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
 public class Project {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

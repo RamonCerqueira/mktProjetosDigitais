@@ -60,6 +60,8 @@ public class AuthService {
                 .city(clean(request.city()))
                 .state(clean(request.state()))
                 .companyName(clean(request.companyName()))
+                .latitude(request.latitude())
+                .longitude(request.longitude())
                 .createdAt(Instant.now())
                 .build());
         return issueTokens(user);
@@ -89,6 +91,6 @@ public class AuthService {
     }
 
     public static UserResponse toUserResponse(User user) {
-        return new UserResponse(user.getId(), user.getName(), user.getEmail(), user.getRole(), user.getDocumentType(), user.getDocumentNumber(), user.getPostalCode(), user.getStreet(), user.getStreetNumber(), user.getComplement(), user.getNeighborhood(), user.getCity(), user.getState(), user.getCompanyName());
+        return new UserResponse(user.getId(), user.getName(), user.getEmail(), user.getRole(), user.getDocumentType(), user.getDocumentNumber(), user.getPostalCode(), user.getStreet(), user.getStreetNumber(), user.getComplement(), user.getNeighborhood(), user.getCity(), user.getState(), user.getCompanyName(), user.getLatitude(), user.getLongitude());
     }
 }

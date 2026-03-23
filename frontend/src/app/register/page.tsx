@@ -1,6 +1,6 @@
 "use client";
 import api from "@/lib/api";
-import { CepLookup, CnpjLookup, DocumentType, DocumentValidation } from "@/types";
+import { CepLookup, CnpjLookup, DocumentType, DocumentValidation, ReverseGeocode } from "@/types";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
@@ -23,11 +23,14 @@ export default function RegisterPage() {
     city: "",
     state: "",
     companyName: "",
+    latitude: undefined as number | undefined,
+    longitude: undefined as number | undefined,
   });
   const [error, setError] = useState("");
   const [documentStatus, setDocumentStatus] = useState<string>("");
   const [loadingCep, setLoadingCep] = useState(false);
   const [loadingCnpj, setLoadingCnpj] = useState(false);
+  const [loadingGeo, setLoadingGeo] = useState(false);
 
   const normalizedDocument = useMemo(() => onlyDigits(form.documentNumber), [form.documentNumber]);
   const normalizedCep = useMemo(() => onlyDigits(form.postalCode), [form.postalCode]);
@@ -89,6 +92,33 @@ export default function RegisterPage() {
     return () => clearTimeout(timeout);
   }, [normalizedCep]);
 
+  const requestLocation = () => {
+    if (!navigator.geolocation) {
+      setError("Seu navegador não suporta geolocalização.");
+      return;
+    }
+    setLoadingGeo(true);
+    navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+      try {
+        const { data } = await api.get<ReverseGeocode>("/integrations/maps/reverse", { params: { lat: coords.latitude, lng: coords.longitude } });
+        setForm((current) => ({
+          ...current,
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          city: data.city || current.city,
+          state: data.state || current.state,
+        }));
+      } catch {
+        setError("Não foi possível converter sua localização em cidade/estado.");
+      } finally {
+        setLoadingGeo(false);
+      }
+    }, () => {
+      setLoadingGeo(false);
+      setError("Permissão de localização negada.");
+    });
+  };
+
   const submit = async () => {
     try {
       setError("");
@@ -105,7 +135,10 @@ export default function RegisterPage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
       <div className="card space-y-4">
-        <h1 className="text-3xl font-bold">Criar conta</h1>
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-3xl font-bold">Criar conta</h1>
+          <button className="btn-secondary" type="button" onClick={requestLocation}>{loadingGeo ? "Localizando..." : "Usar minha localização"}</button>
+        </div>
         <div className="grid gap-4 md:grid-cols-2">
           <input className="input" placeholder="Nome" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           <input className="input" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
