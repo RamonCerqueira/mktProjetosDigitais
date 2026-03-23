@@ -63,6 +63,8 @@ public class AuthService {
                 .latitude(request.latitude())
                 .longitude(request.longitude())
                 .createdAt(Instant.now())
+                .active(true)
+                .blocked(false)
                 .build());
         return issueTokens(user);
     }
@@ -70,6 +72,8 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.email(), request.password()));
         User user = userRepository.findByEmail(request.email()).orElseThrow();
+        user.setLastLoginAt(Instant.now());
+        userRepository.save(user);
         return issueTokens(user);
     }
 
@@ -91,6 +95,6 @@ public class AuthService {
     }
 
     public static UserResponse toUserResponse(User user) {
-        return new UserResponse(user.getId(), user.getName(), user.getEmail(), user.getRole(), user.getDocumentType(), user.getDocumentNumber(), user.getPostalCode(), user.getStreet(), user.getStreetNumber(), user.getComplement(), user.getNeighborhood(), user.getCity(), user.getState(), user.getCompanyName(), user.getLatitude(), user.getLongitude());
+        return new UserResponse(user.getId(), user.getName(), user.getEmail(), user.getRole(), user.getDocumentType(), user.getDocumentNumber(), user.getPostalCode(), user.getStreet(), user.getStreetNumber(), user.getComplement(), user.getNeighborhood(), user.getCity(), user.getState(), user.getCompanyName(), user.getLatitude(), user.getLongitude(), user.isActive(), user.isBlocked());
     }
 }

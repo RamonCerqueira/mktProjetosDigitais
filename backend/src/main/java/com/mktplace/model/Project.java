@@ -28,6 +28,10 @@ public class Project {
     private BigDecimal monthlyRevenue;
     @Enumerated(EnumType.STRING)
     private ProjectStatus status;
+    @Builder.Default
+    private boolean verified = false;
+    private String moderationNotes;
+    private Instant moderatedAt;
     private Instant createdAt;
     private Instant updatedAt;
 }

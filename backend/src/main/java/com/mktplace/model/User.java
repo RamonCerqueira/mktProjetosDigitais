@@ -46,6 +46,12 @@ public class User {
     private Double longitude;
     @Column(nullable = false)
     private Instant createdAt;
+    @Builder.Default
+    private boolean active = true;
+    @Builder.Default
+    private boolean blocked = false;
+    private Instant canceledAt;
+    private Instant lastLoginAt;
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))

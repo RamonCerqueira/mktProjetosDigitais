@@ -33,3 +33,11 @@ export interface Transaction { id: number; projectId: number; amount: number; pl
 
 export interface OfferHistory { id: number; offerId: number; actorId: number; actionType: string; amount: number; details: string; createdAt: string; }
 export interface Message { id: number; offerId: number; negotiationKey: string; senderId: number; senderName: string; receiverId: number; receiverName: string; content: string; createdAt: string; }
+
+export interface TimeSeriesPoint { label: string; value: number; }
+export interface AdminOverview { financial: { monthlyRecurringRevenue: number; totalRevenue: number; totalCommission: number; activeSubscriptions: number; churnRate: number; }; conversion: { visitors: number; users: number; subscribers: number; visitorToUserRate: number; userToSubscriberRate: number; retentionRate: number; }; projects: { totalProjects: number; soldProjects: number; suspiciousProjects: number; }; newUsersByDay: TimeSeriesPoint[]; projectsByDay: TimeSeriesPoint[]; topSellers: Array<{ sellerId: number; sellerName: string; soldProjects: number; grossRevenue: number; }>; }
+export interface AdminUserSummary { id: number; name: string; email: string; role: Role; roles: Role[]; blocked: boolean; active: boolean; subscriptionStatus: string; createdAt: string; lastLoginAt?: string | null; city?: string; state?: string; }
+export interface AuditEntry { id: number; actorEmail?: string; action: string; resourceType: string; resourceId?: string; httpMethod?: string; path?: string; ipAddress?: string; metadata?: string; createdAt: string; }
+export interface AdminUserDetail { user: AdminUserSummary; documentType: string; documentNumber: string; postalCode?: string; street?: string; streetNumber?: string; complement?: string; neighborhood?: string; companyName?: string; history: AuditEntry[]; }
+export interface AdminProject { id: number; title: string; status: string; verified: boolean; suspicious: boolean; moderationNotes?: string | null; sellerName: string; price: number; monthlyRevenue: number; createdAt: string; }
+export interface AdminTransaction { id: number; projectId: number; projectTitle: string; buyerName: string; sellerName: string; amount: number; platformFee: number; sellerNetAmount: number; status: string; createdAt: string; paymentIntentId?: string | null; }

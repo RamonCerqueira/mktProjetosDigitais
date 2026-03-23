@@ -45,3 +45,19 @@ docker compose --env-file .env up --build
 - `APP_JWT_SECRET`, `APP_JWT_ACCESS_EXPIRATION_MS`, `APP_JWT_REFRESH_EXPIRATION_MS`
 - `APP_SUBSCRIPTION_PLAN_PRICE`, `APP_SUBSCRIPTION_DURATION_DAYS`, `APP_EVENTS_ENABLED`
 - `NEXT_PUBLIC_API_URL`
+
+
+## Painel MASTER
+- Rota frontend: `/admin`
+- Endpoints backend protegidos: `/api/admin/**`
+- Recursos: gestão de usuários, métricas, financeiro, moderação de projetos, ranking de sellers e auditoria
+
+## Documentação interna
+- OpenAPI JSON: `/api/docs/api`
+- Swagger UI: `/api/docs/swagger`
+
+## Documentação para usuários
+- Guia central: `/help`
+- Termos de uso: `/terms`
+- Política de privacidade: `/privacy`
+- Regras do marketplace: `/marketplace-rules`

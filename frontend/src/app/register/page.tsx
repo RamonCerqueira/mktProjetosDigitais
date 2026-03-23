@@ -126,7 +126,8 @@ export default function RegisterPage() {
       const { data } = await api.post("/auth/register", payload);
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
-      router.push("/dashboard");
+      localStorage.setItem("userRole", data.user.role);
+      router.push(data.user.role === "ADMIN" ? "/admin" : "/dashboard");
     } catch (e: any) {
       setError(e?.response?.data?.error || "Falha no cadastro");
     }
