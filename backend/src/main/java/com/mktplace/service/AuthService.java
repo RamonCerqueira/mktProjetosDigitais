@@ -20,6 +20,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Set;
 
 import static com.mktplace.validation.DocumentValidator.*;
+import static com.mktplace.validation.InputSanitizer.clean;
 
 @Service
 public class AuthService {
@@ -40,9 +41,27 @@ public class AuthService {
     public AuthResponse register(RegisterRequest request) {
         userRepository.findByEmail(request.email()).ifPresent(u -> { throw new BusinessException("Email já cadastrado", HttpStatus.CONFLICT); });
         Role role = request.role() == null ? Role.BUYER : request.role();
-        validateBrazilianDocument(request.documentType(), request.documentNumber());
+        DocumentType documentType = request.documentType() == null ? DocumentType.CPF : request.documentType();
+        validateBrazilianDocument(documentType, request.documentNumber());
         String sanitizedDocument = digits(request.documentNumber());
-        User user = userRepository.save(User.builder().name(request.name()).email(request.email()).password(passwordEncoder.encode(request.password())).role(role).roles(Set.of(role)).documentType(request.documentType() == null ? DocumentType.CPF : request.documentType()).documentNumber(sanitizedDocument).createdAt(Instant.now()).build());
+        User user = userRepository.save(User.builder()
+                .name(clean(request.name()))
+                .email(request.email())
+                .password(passwordEncoder.encode(request.password()))
+                .role(role)
+                .roles(Set.of(role))
+                .documentType(documentType)
+                .documentNumber(sanitizedDocument)
+                .postalCode(digits(request.postalCode()))
+                .street(clean(request.street()))
+                .streetNumber(clean(request.streetNumber()))
+                .complement(clean(request.complement()))
+                .neighborhood(clean(request.neighborhood()))
+                .city(clean(request.city()))
+                .state(clean(request.state()))
+                .companyName(clean(request.companyName()))
+                .createdAt(Instant.now())
+                .build());
         return issueTokens(user);
     }
 
@@ -58,8 +77,7 @@ public class AuthService {
     }
 
     private void validateBrazilianDocument(DocumentType type, String number) {
-        DocumentType resolved = type == null ? DocumentType.CPF : type;
-        boolean valid = resolved == DocumentType.CPF ? isValidCpf(number) : isValidCnpj(number);
+        boolean valid = type == DocumentType.CPF ? isValidCpf(number) : isValidCnpj(number);
         if (!valid) throw new BusinessException("CPF/CNPJ inválido", HttpStatus.BAD_REQUEST);
     }
 
@@ -67,6 +85,10 @@ public class AuthService {
         String access = jwtService.generateAccessToken(user.getEmail());
         String refresh = jwtService.generateRefreshToken(user.getEmail());
         refreshTokenRepository.save(RefreshToken.builder().token(refresh).user(user).expiresAt(Instant.now().plus(30, ChronoUnit.DAYS)).revoked(false).build());
-        return new AuthResponse(access, refresh, new UserResponse(user.getId(), user.getName(), user.getEmail(), user.getRole(), user.getDocumentType(), user.getDocumentNumber()));
+        return new AuthResponse(access, refresh, toUserResponse(user));
+    }
+
+    public static UserResponse toUserResponse(User user) {
+        return new UserResponse(user.getId(), user.getName(), user.getEmail(), user.getRole(), user.getDocumentType(), user.getDocumentNumber(), user.getPostalCode(), user.getStreet(), user.getStreetNumber(), user.getComplement(), user.getNeighborhood(), user.getCity(), user.getState(), user.getCompanyName());
     }
 }

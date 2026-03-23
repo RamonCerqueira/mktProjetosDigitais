@@ -1,7 +1,7 @@
 package com.mktplace.controller;
 
 import com.mktplace.dto.AuthDtos.DashboardResponse;
-import com.mktplace.dto.AuthDtos.UserResponse;
+import com.mktplace.service.AuthService;
 import com.mktplace.service.OfferService;
 import com.mktplace.service.ProjectService;
 import com.mktplace.service.SubscriptionService;
@@ -30,6 +30,6 @@ public class DashboardController {
     @GetMapping
     public DashboardResponse getDashboard() {
         var user = userContextService.getCurrentUser();
-        return new DashboardResponse(new UserResponse(user.getId(), user.getName(), user.getEmail(), user.getRole(), user.getDocumentType(), user.getDocumentNumber()), subscriptionService.getStatus(user), projectService.myProjects(user), offerService.myOffers(user));
+        return new DashboardResponse(AuthService.toUserResponse(user), subscriptionService.getStatus(user), projectService.myProjects(user), offerService.myOffers(user));
     }
 }

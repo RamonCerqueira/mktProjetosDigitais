@@ -29,6 +29,16 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+    @Column(length = 10)
+    private String postalCode;
+    private String street;
+    private String streetNumber;
+    private String complement;
+    private String neighborhood;
+    private String city;
+    @Column(length = 2)
+    private String state;
+    private String companyName;
     @Column(nullable = false)
     private Instant createdAt;
     @ElementCollection(fetch = FetchType.EAGER)

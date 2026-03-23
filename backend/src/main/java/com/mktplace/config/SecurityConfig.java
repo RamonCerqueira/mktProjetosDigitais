@@ -39,7 +39,7 @@ public class SecurityConfig {
                         .permissionsPolicy(policy -> policy.policy("geolocation=(), microphone=(), camera=()")))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/marketplace/**").permitAll()
-                        .requestMatchers("/auth/**", "/ws/**").permitAll()
+                        .requestMatchers("/auth/**", "/ws/**", "/integrations/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/projects/**", "/subscription/**").hasAnyRole("SELLER", "ADMIN")
                         .requestMatchers("/offers/**", "/transactions/**", "/favorites/**", "/dashboard/**").authenticated()

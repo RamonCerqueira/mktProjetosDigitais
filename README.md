@@ -1,7 +1,7 @@
 # Marketplace de Projetos Digitais
 
 Monorepo organizado em duas pastas principais:
-- `backend/`: API Spring Boot com autenticação, RBAC, assinatura, antifraude e auditoria.
+- `backend/`: API Spring Boot com autenticação, RBAC, assinatura, antifraude, auditoria e integrações externas.
 - `frontend/`: aplicação Next.js com fluxos de cadastro, login, assinatura, dashboard e marketplace público.
 
 ## Stack
@@ -17,8 +17,15 @@ Monorepo organizado em duas pastas principais:
 - Busca sanitizada e uso de JPA para reduzir risco de SQL Injection
 - Rate limiting por rota/ator
 - Logs de auditoria de requests e ações críticas
-- Validação de CPF/CNPJ no cadastro
+- Validação completa de CPF/CNPJ no cadastro
 - Antifraude básica em ofertas e compras
+
+## Integrações implementadas
+- ViaCEP: busca de endereço por CEP no backend
+- ReceitaWS: busca de dados empresariais por CNPJ no backend
+- Endpoint público de validação documental (`CPF` e `CNPJ`)
+- Frontend com auto-preenchimento de endereço e razão/nome fantasia durante o cadastro
+- Validação documental em tempo real na tela de registro
 
 ## Como rodar com Docker
 ```bash
