@@ -3,10 +3,12 @@ package com.mktplace.controller;
 import com.mktplace.dto.AuthDtos.SubscriptionResponse;
 import com.mktplace.service.SubscriptionService;
 import com.mktplace.service.UserContextService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/subscription")
+@PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
 public class SubscriptionController {
     private final SubscriptionService subscriptionService;
     private final UserContextService userContextService;

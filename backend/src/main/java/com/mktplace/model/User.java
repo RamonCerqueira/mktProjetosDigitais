@@ -1,5 +1,6 @@
 package com.mktplace.model;
 
+import com.mktplace.enums.DocumentType;
 import com.mktplace.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
@@ -18,6 +19,11 @@ public class User {
     private String name;
     @Column(nullable = false, unique = true)
     private String email;
+    @Column(nullable = false, unique = true, length = 18)
+    private String documentNumber;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private DocumentType documentType;
     @Column(nullable = false)
     private String password;
     @Enumerated(EnumType.STRING)

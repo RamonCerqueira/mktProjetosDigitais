@@ -1,10 +1,24 @@
 # Marketplace de Projetos Digitais
 
-Monorepo com backend Spring Boot + frontend Next.js para um marketplace de micro-SaaS com monetização por assinatura mensal.
+Monorepo organizado em duas pastas principais:
+- `backend/`: API Spring Boot com autenticação, RBAC, assinatura, antifraude e auditoria.
+- `frontend/`: aplicação Next.js com fluxos de cadastro, login, assinatura, dashboard e marketplace público.
 
 ## Stack
 - Backend: Java 25, Spring Boot, Spring Security, JPA/Hibernate, PostgreSQL, JWT + refresh token, WebSocket, Redis-ready, Docker
 - Frontend: Next.js (TypeScript), TailwindCSS, Axios
+
+## Segurança implementada
+- JWT access token + refresh token persistido
+- RBAC com `ADMIN`, `SELLER` e `BUYER`
+- Headers de segurança contra XSS/clickjacking
+- CSRF token para chamadas mutáveis do frontend
+- Sanitização de entrada para reduzir risco de XSS
+- Busca sanitizada e uso de JPA para reduzir risco de SQL Injection
+- Rate limiting por rota/ator
+- Logs de auditoria de requests e ações críticas
+- Validação de CPF/CNPJ no cadastro
+- Antifraude básica em ofertas e compras
 
 ## Como rodar com Docker
 ```bash
@@ -27,6 +41,8 @@ npm run dev
 
 ## Regras de negócio implementadas
 - Apenas usuários SELLER com assinatura ACTIVE e não expirada podem publicar projetos.
+- Usuário sem assinatura não pode publicar nem atualizar projeto para publicação.
 - Se a assinatura expira, os projetos do seller são ocultados automaticamente da listagem pública.
-- Validação de assinatura em ações críticas no backend.
-- Assinatura mockada com plano único de R$ 9,90/mês.
+- Sistema valida assinatura em cada ação crítica de publicação.
+- Cadastro valida CPF/CNPJ antes de criar conta.
+- Antifraude bloqueia auto-compra, auto-negociação e ofertas excessivamente baixas.

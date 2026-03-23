@@ -21,10 +21,12 @@ public class SubscriptionService {
     private final ProjectRepository projectRepository;
     private final BigDecimal planPrice;
     private final int durationDays;
+    private final AuditService auditService;
 
-    public SubscriptionService(SubscriptionRepository subscriptionRepository, ProjectRepository projectRepository, @Value("${app.subscription.plan-price}") BigDecimal planPrice, @Value("${app.subscription.duration-days}") int durationDays) {
+    public SubscriptionService(SubscriptionRepository subscriptionRepository, ProjectRepository projectRepository, AuditService auditService, @Value("${app.subscription.plan-price}") BigDecimal planPrice, @Value("${app.subscription.duration-days}") int durationDays) {
         this.subscriptionRepository = subscriptionRepository;
         this.projectRepository = projectRepository;
+        this.auditService = auditService;
         this.planPrice = planPrice;
         this.durationDays = durationDays;
     }
@@ -42,6 +44,7 @@ public class SubscriptionService {
         subscription.setUpdatedAt(Instant.now());
         subscription.setPrice(planPrice);
         subscriptionRepository.save(subscription);
+        auditService.logAction("SUBSCRIPTION_ACTIVATED", "SUBSCRIPTION", String.valueOf(subscription.getId()), user.getEmail());
         return getStatus(user);
     }
 
@@ -62,6 +65,7 @@ public class SubscriptionService {
             subscription.setStatus(SubscriptionStatus.PAST_DUE);
             subscription.setUpdatedAt(Instant.now());
             subscriptionRepository.save(subscription);
+            auditService.logAction("SUBSCRIPTION_EXPIRED", "SUBSCRIPTION", String.valueOf(subscription.getId()), user.getEmail());
             projectRepository.findBySeller(user).forEach(project -> {
                 project.setStatus(com.mktplace.enums.ProjectStatus.HIDDEN);
                 projectRepository.save(project);

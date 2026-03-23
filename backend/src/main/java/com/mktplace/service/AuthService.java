@@ -1,6 +1,7 @@
 package com.mktplace.service;
 
 import com.mktplace.dto.AuthDtos.*;
+import com.mktplace.enums.DocumentType;
 import com.mktplace.enums.Role;
 import com.mktplace.exception.BusinessException;
 import com.mktplace.model.RefreshToken;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
+
+import static com.mktplace.validation.DocumentValidator.*;
 
 @Service
 public class AuthService {
@@ -37,7 +40,9 @@ public class AuthService {
     public AuthResponse register(RegisterRequest request) {
         userRepository.findByEmail(request.email()).ifPresent(u -> { throw new BusinessException("Email já cadastrado", HttpStatus.CONFLICT); });
         Role role = request.role() == null ? Role.BUYER : request.role();
-        User user = userRepository.save(User.builder().name(request.name()).email(request.email()).password(passwordEncoder.encode(request.password())).role(role).roles(Set.of(role)).createdAt(Instant.now()).build());
+        validateBrazilianDocument(request.documentType(), request.documentNumber());
+        String sanitizedDocument = digits(request.documentNumber());
+        User user = userRepository.save(User.builder().name(request.name()).email(request.email()).password(passwordEncoder.encode(request.password())).role(role).roles(Set.of(role)).documentType(request.documentType() == null ? DocumentType.CPF : request.documentType()).documentNumber(sanitizedDocument).createdAt(Instant.now()).build());
         return issueTokens(user);
     }
 
@@ -52,10 +57,16 @@ public class AuthService {
         return issueTokens(saved.getUser());
     }
 
+    private void validateBrazilianDocument(DocumentType type, String number) {
+        DocumentType resolved = type == null ? DocumentType.CPF : type;
+        boolean valid = resolved == DocumentType.CPF ? isValidCpf(number) : isValidCnpj(number);
+        if (!valid) throw new BusinessException("CPF/CNPJ inválido", HttpStatus.BAD_REQUEST);
+    }
+
     private AuthResponse issueTokens(User user) {
         String access = jwtService.generateAccessToken(user.getEmail());
         String refresh = jwtService.generateRefreshToken(user.getEmail());
         refreshTokenRepository.save(RefreshToken.builder().token(refresh).user(user).expiresAt(Instant.now().plus(30, ChronoUnit.DAYS)).revoked(false).build());
-        return new AuthResponse(access, refresh, new UserResponse(user.getId(), user.getName(), user.getEmail(), user.getRole()));
+        return new AuthResponse(access, refresh, new UserResponse(user.getId(), user.getName(), user.getEmail(), user.getRole(), user.getDocumentType(), user.getDocumentNumber()));
     }
 }

@@ -18,19 +18,25 @@ public class TransactionService {
     private static final BigDecimal COMMISSION_RATE = new BigDecimal("0.10");
     private final ProjectService projectService;
     private final TransactionRepository transactionRepository;
+    private final FraudPreventionService fraudPreventionService;
+    private final AuditService auditService;
 
-    public TransactionService(ProjectService projectService, TransactionRepository transactionRepository) {
+    public TransactionService(ProjectService projectService, TransactionRepository transactionRepository, FraudPreventionService fraudPreventionService, AuditService auditService) {
         this.projectService = projectService;
         this.transactionRepository = transactionRepository;
+        this.fraudPreventionService = fraudPreventionService;
+        this.auditService = auditService;
     }
 
     public TransactionResponse purchase(User buyer, Long projectId) {
         var project = projectService.getEntity(projectId);
         if (project.getStatus() != ProjectStatus.PUBLISHED) throw new BusinessException("Projeto indisponível", HttpStatus.BAD_REQUEST);
+        fraudPreventionService.validatePurchase(buyer, project);
         BigDecimal fee = project.getPrice().multiply(COMMISSION_RATE);
         BigDecimal sellerNet = project.getPrice().subtract(fee);
         Transaction tx = transactionRepository.save(Transaction.builder().buyer(buyer).seller(project.getSeller()).project(project).amount(project.getPrice()).platformFee(fee).sellerNetAmount(sellerNet).status(TransactionStatus.COMPLETED).createdAt(Instant.now()).build());
-        project.setStatus(ProjectStatus.SOLD);
+        projectService.markAsSold(project);
+        auditService.logAction("PROJECT_PURCHASED", "TRANSACTION", String.valueOf(tx.getId()), "project=" + projectId);
         return new TransactionResponse(tx.getId(), projectId, tx.getAmount(), tx.getPlatformFee(), tx.getSellerNetAmount(), tx.getStatus().name());
     }
 }

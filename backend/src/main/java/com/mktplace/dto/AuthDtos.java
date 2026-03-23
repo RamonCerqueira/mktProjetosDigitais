@@ -1,5 +1,6 @@
 package com.mktplace.dto;
 
+import com.mktplace.enums.DocumentType;
 import com.mktplace.enums.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -9,11 +10,11 @@ import java.time.Instant;
 import java.util.List;
 
 public class AuthDtos {
-    public record RegisterRequest(@NotBlank String name, @Email String email, @NotBlank String password, Role role) {}
+    public record RegisterRequest(@NotBlank String name, @Email String email, @NotBlank String password, Role role, DocumentType documentType, @NotBlank String documentNumber) {}
     public record LoginRequest(@Email String email, @NotBlank String password) {}
     public record AuthResponse(String accessToken, String refreshToken, UserResponse user) {}
     public record RefreshRequest(String refreshToken) {}
-    public record UserResponse(Long id, String name, String email, Role role) {}
+    public record UserResponse(Long id, String name, String email, Role role, DocumentType documentType, String documentNumber) {}
     public record SubscriptionResponse(String status, Instant expiresAt, BigDecimal price, boolean canPublish) {}
     public record ProjectRequest(String title, String description, String category, String techStack, BigDecimal price, BigDecimal monthlyRevenue) {}
     public record ProjectResponse(Long id, String title, String description, String category, String techStack, BigDecimal price, BigDecimal monthlyRevenue, String status, Long sellerId, String sellerName) {}

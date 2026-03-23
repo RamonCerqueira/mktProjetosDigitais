@@ -3,12 +3,14 @@ package com.mktplace.controller;
 import com.mktplace.dto.AuthDtos.*;
 import com.mktplace.service.OfferService;
 import com.mktplace.service.UserContextService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/offers")
+@PreAuthorize("isAuthenticated()")
 public class OfferController {
     private final OfferService offerService;
     private final UserContextService userContextService;
