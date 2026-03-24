@@ -69,6 +69,25 @@ Para usar Gmail SMTP com senha de app:
 - Notificações de negociação: oferta/mensagem/aceite/rejeição.
 - Notificações de pagamento: confirmação de pagamento.
 
+## Upload de arquivos (simulação S3)
+- Tipos suportados:
+  - Imagens: JPEG, PNG, WEBP, GIF
+  - Arquivos: ZIP, PDF, DOC, DOCX
+- Endpoints:
+  - `POST /api/projects/{id}/assets` (`multipart/form-data` com `type=IMAGE|DOCUMENT` e `file`)
+  - `GET /api/projects/{id}/assets`
+  - `GET /api/projects/{id}/assets/{assetId}/download`
+- Segurança:
+  - Limite de tamanho por arquivo via `APP_STORAGE_MAX_FILE_SIZE_BYTES`
+  - Limites multipart via `SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE` e `SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE`
+  - Upload/download somente para dono do projeto (seller/admin autorizado)
+
+## Otimizações de performance
+- Índices adicionais em `projects`, `offers` e `project_assets`.
+- Cache Redis para listagens frequentes (`publicProjects`, `topRankedProjects`, `myProjects`, `myOffers`).
+- Queries com `EntityGraph` para reduzir N+1 em listagens com relacionamentos.
+- Lazy loading no frontend para o `ChatPanel` no dashboard.
+
 
 ## Painel MASTER
 - Rota frontend: `/admin`

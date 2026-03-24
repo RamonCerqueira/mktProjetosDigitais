@@ -10,7 +10,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface ProjectRepository extends JpaRepository<Project, Long> {
-    List<Project> findBySeller(User seller);
+    @EntityGraph(attributePaths = "seller")
+    List<Project> findBySellerOrderByCreatedAtDesc(User seller);
     boolean existsBySellerAndTitleIgnoreCase(User seller, String title);
 
 

@@ -10,7 +10,9 @@ import java.time.Instant;
 @Entity
 @Table(indexes = {
         @Index(name = "idx_project_status_title", columnList = "status,title"),
-        @Index(name = "idx_project_status_category", columnList = "status,category")
+        @Index(name = "idx_project_status_category", columnList = "status,category"),
+        @Index(name = "idx_project_seller_created", columnList = "seller_id,createdAt"),
+        @Index(name = "idx_project_created", columnList = "createdAt")
 })
 @Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
 public class Project {

@@ -15,6 +15,8 @@ import com.mktplace.repository.OfferHistoryRepository;
 import com.mktplace.repository.OfferRepository;
 import com.mktplace.repository.UserRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -48,6 +50,7 @@ public class OfferService {
         this.eventPublisher = eventPublisher;
     }
 
+    @CacheEvict(cacheNames = "myOffers", key = "#buyer.id")
     public OfferResponse createOffer(User buyer, OfferRequest request) {
         var project = projectService.getEntity(request.projectId());
         fraudPreventionService.validateOffer(buyer, project, request.amount());
@@ -58,6 +61,7 @@ public class OfferService {
         return toResponse(offer);
     }
 
+    @CacheEvict(cacheNames = "myOffers", allEntries = true)
     public OfferResponse counterOffer(User actor, CounterOfferRequest request) {
         Offer current = getNegotiationOffer(request.offerId());
         ensureParticipant(actor, current);
@@ -75,6 +79,7 @@ public class OfferService {
         return toResponse(counter);
     }
 
+    @CacheEvict(cacheNames = "myOffers", allEntries = true)
     public OfferResponse acceptOffer(User actor, Long offerId) {
         Offer offer = getNegotiationOffer(offerId);
         ensureParticipant(actor, offer);
@@ -89,6 +94,7 @@ public class OfferService {
         return toResponse(offer);
     }
 
+    @CacheEvict(cacheNames = "myOffers", allEntries = true)
     public OfferResponse rejectOffer(User actor, Long offerId) {
         Offer offer = getNegotiationOffer(offerId);
         ensureParticipant(actor, offer);
@@ -103,8 +109,9 @@ public class OfferService {
         return toResponse(offer);
     }
 
+    @Cacheable(cacheNames = "myOffers", key = "#user.id")
     public List<OfferResponse> myOffers(User user) {
-        return offerRepository.findByBuyerIdOrSellerId(user.getId(), user.getId()).stream().map(this::toResponse).toList();
+        return offerRepository.findByBuyerIdOrSellerIdOrderByUpdatedAtDesc(user.getId(), user.getId()).stream().map(this::toResponse).toList();
     }
 
     public List<OfferHistoryResponse> history(User user, Long offerId) {

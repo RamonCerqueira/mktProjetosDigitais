@@ -47,7 +47,7 @@ public class SubscriptionService {
         return subscription == null ? new SubscriptionResponse(SubscriptionStatus.CANCELED.name(), null, planPrice, false, false, null) : toResponse(subscription, user);
     }
 
-    @CacheEvict(cacheNames = {"subscriptionStatus", "publicProjects", "topRankedProjects"}, allEntries = true)
+    @CacheEvict(cacheNames = {"subscriptionStatus", "publicProjects", "topRankedProjects", "myProjects"}, allEntries = true)
     public SubscriptionResponse activateMockSubscription(User user) {
         Subscription subscription = subscriptionRepository.findByUser(user).orElse(Subscription.builder().user(user).build());
         subscription.setStatus(SubscriptionStatus.ACTIVE);
@@ -64,7 +64,7 @@ public class SubscriptionService {
         return toResponse(subscription, user);
     }
 
-    @CacheEvict(cacheNames = {"subscriptionStatus", "publicProjects", "topRankedProjects"}, allEntries = true)
+    @CacheEvict(cacheNames = {"subscriptionStatus", "publicProjects", "topRankedProjects", "myProjects"}, allEntries = true)
     public SubscriptionResponse cancel(User user) {
         Subscription subscription = subscriptionRepository.findByUser(user).orElseThrow(() -> new BusinessException("Assinatura não encontrada", HttpStatus.NOT_FOUND));
         subscription.setStatus(SubscriptionStatus.CANCELED);
@@ -78,7 +78,7 @@ public class SubscriptionService {
         return toResponse(subscription, user);
     }
 
-    @CacheEvict(cacheNames = {"subscriptionStatus", "publicProjects", "topRankedProjects"}, allEntries = true)
+    @CacheEvict(cacheNames = {"subscriptionStatus", "publicProjects", "topRankedProjects", "myProjects"}, allEntries = true)
     public SubscriptionResponse renewNow(User user) {
         Subscription subscription = subscriptionRepository.findByUser(user).orElseThrow(() -> new BusinessException("Assinatura não encontrada", HttpStatus.NOT_FOUND));
         subscription.setStatus(SubscriptionStatus.ACTIVE);
@@ -94,7 +94,7 @@ public class SubscriptionService {
         return toResponse(subscription, user);
     }
 
-    @CacheEvict(cacheNames = {"subscriptionStatus", "publicProjects", "topRankedProjects"}, allEntries = true)
+    @CacheEvict(cacheNames = {"subscriptionStatus", "publicProjects", "topRankedProjects", "myProjects"}, allEntries = true)
     public void handleWebhook(SubscriptionWebhookRequest request) {
         Subscription subscription = resolveSubscription(request);
         switch (request.eventType()) {
@@ -167,7 +167,7 @@ public class SubscriptionService {
     }
 
     private void hideProjects(User user) {
-        projectRepository.findBySeller(user).forEach(project -> {
+        projectRepository.findBySellerOrderByCreatedAtDesc(user).forEach(project -> {
             project.setStatus(com.mktplace.enums.ProjectStatus.HIDDEN);
             projectRepository.save(project);
         });

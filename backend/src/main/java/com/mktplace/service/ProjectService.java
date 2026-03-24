@@ -41,7 +41,7 @@ public class ProjectService {
         this.eventPublisher = eventPublisher;
     }
 
-    @CacheEvict(cacheNames = {"publicProjects", "topRankedProjects"}, allEntries = true)
+    @CacheEvict(cacheNames = {"publicProjects", "topRankedProjects", "myProjects"}, allEntries = true)
     public ProjectResponse create(User user, ProjectRequest request) {
         assertIndividualSeller(user);
         subscriptionService.assertCanPublish(user);
@@ -81,11 +81,12 @@ public class ProjectService {
         return publicList(null, null, null).stream().limit(10).toList();
     }
 
+    @Cacheable(cacheNames = "myProjects", key = "#user.id")
     public List<ProjectResponse> myProjects(User user) {
-        return projectRepository.findBySeller(user).stream().map(project -> toResponse(project, null)).toList();
+        return projectRepository.findBySellerOrderByCreatedAtDesc(user).stream().map(project -> toResponse(project, null)).toList();
     }
 
-    @CacheEvict(cacheNames = {"publicProjects", "topRankedProjects"}, allEntries = true)
+    @CacheEvict(cacheNames = {"publicProjects", "topRankedProjects", "myProjects"}, allEntries = true)
     public ProjectResponse update(User user, Long id, ProjectRequest request) {
         assertIndividualSeller(user);
         Project project = getOwnedProject(user, id);
@@ -106,7 +107,7 @@ public class ProjectService {
         return toResponse(saved, null);
     }
 
-    @CacheEvict(cacheNames = {"publicProjects", "topRankedProjects"}, allEntries = true)
+    @CacheEvict(cacheNames = {"publicProjects", "topRankedProjects", "myProjects"}, allEntries = true)
     public void delete(User user, Long id) {
         Project project = getOwnedProject(user, id);
         projectRepository.delete(project);
@@ -118,7 +119,7 @@ public class ProjectService {
         return projectRepository.findById(id).orElseThrow(() -> new BusinessException("Projeto não encontrado", HttpStatus.NOT_FOUND));
     }
 
-    @CacheEvict(cacheNames = {"publicProjects", "topRankedProjects"}, allEntries = true)
+    @CacheEvict(cacheNames = {"publicProjects", "topRankedProjects", "myProjects"}, allEntries = true)
     public void markAsSold(Project project) {
         project.setStatus(ProjectStatus.SOLD);
         project.setUpdatedAt(Instant.now());
