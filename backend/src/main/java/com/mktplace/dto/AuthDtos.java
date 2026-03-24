@@ -12,6 +12,8 @@ import java.util.List;
 public class AuthDtos {
     public record RegisterRequest(@NotBlank String name, @Email String email, @NotBlank String password, Role role, DocumentType documentType, @NotBlank String documentNumber, String postalCode, String street, String streetNumber, String complement, String neighborhood, String city, String state, String companyName, Double latitude, Double longitude) {}
     public record LoginRequest(@Email String email, @NotBlank String password) {}
+    public record ForgotPasswordRequest(@Email String email) {}
+    public record ResetPasswordRequest(@NotBlank String token, @NotBlank String newPassword) {}
     public record AuthResponse(String accessToken, String refreshToken, UserResponse user) {}
     public record RefreshRequest(String refreshToken) {}
     public record UserResponse(Long id, String name, String email, Role role, DocumentType documentType, String documentNumber, String postalCode, String street, String streetNumber, String complement, String neighborhood, String city, String state, String companyName, Double latitude, Double longitude, boolean active, boolean blocked) {}

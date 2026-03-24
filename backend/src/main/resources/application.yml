@@ -29,16 +29,16 @@ spring:
       simple:
         default-requeue-rejected: false
   mail:
-    host: ${SPRING_MAIL_HOST:localhost}
-    port: ${SPRING_MAIL_PORT:1025}
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
     username: ${SPRING_MAIL_USERNAME:}
     password: ${SPRING_MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
-          auth: ${SPRING_MAIL_SMTP_AUTH:false}
+          auth: ${SPRING_MAIL_SMTP_AUTH:true}
           starttls:
-            enable: ${SPRING_MAIL_SMTP_STARTTLS:false}
+            enable: ${SPRING_MAIL_SMTP_STARTTLS:true}
   mvc:
     problemdetails:
       enabled: true
@@ -64,8 +64,10 @@ app:
     password: ${APP_ADMIN_PASSWORD:Admin123!}
     document-number: ${APP_ADMIN_DOCUMENT_NUMBER:11144477735}
   notifications:
-    email-enabled: ${APP_NOTIFICATIONS_EMAIL_ENABLED:false}
-    email-from: ${APP_NOTIFICATIONS_EMAIL_FROM:no-reply@marketplace.local}
+    email-enabled: ${APP_NOTIFICATIONS_EMAIL_ENABLED:true}
+    email-from: ${APP_NOTIFICATIONS_EMAIL_FROM:${SPRING_MAIL_USERNAME:no-reply@marketplace.local}}
+    frontend-base-url: ${APP_FRONTEND_BASE_URL:http://localhost:3000}
+    password-reset-expiration-minutes: ${APP_PASSWORD_RESET_EXPIRATION_MINUTES:30}
 server:
   servlet:
     context-path: /api

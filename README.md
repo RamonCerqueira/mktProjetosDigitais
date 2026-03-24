@@ -45,6 +45,29 @@ docker compose --env-file .env up --build
 - `APP_JWT_SECRET`, `APP_JWT_ACCESS_EXPIRATION_MS`, `APP_JWT_REFRESH_EXPIRATION_MS`
 - `APP_SUBSCRIPTION_PLAN_PRICE`, `APP_SUBSCRIPTION_DURATION_DAYS`, `APP_EVENTS_ENABLED`
 - `NEXT_PUBLIC_API_URL`
+- `SPRING_MAIL_HOST`, `SPRING_MAIL_PORT`, `SPRING_MAIL_USERNAME`, `SPRING_MAIL_PASSWORD`
+- `APP_NOTIFICATIONS_EMAIL_ENABLED`, `APP_NOTIFICATIONS_EMAIL_FROM`
+- `APP_FRONTEND_BASE_URL`, `APP_PASSWORD_RESET_EXPIRATION_MINUTES`
+
+## SMTP Gmail (produção)
+Para usar Gmail SMTP com senha de app:
+1. Ative verificação em 2 etapas na conta Google.
+2. Gere uma **App Password**.
+3. Configure no `.env`:
+   - `SPRING_MAIL_HOST=smtp.gmail.com`
+   - `SPRING_MAIL_PORT=587`
+   - `SPRING_MAIL_USERNAME=seu-email@gmail.com`
+   - `SPRING_MAIL_PASSWORD=SUA_APP_PASSWORD`
+   - `SPRING_MAIL_SMTP_AUTH=true`
+   - `SPRING_MAIL_SMTP_STARTTLS=true`
+
+## Fluxos de e-mail implementados
+- Confirmação de cadastro: enviada após `POST /api/auth/register`.
+- Recuperação de senha:
+  - Solicitar: `POST /api/auth/forgot-password`
+  - Redefinir: `POST /api/auth/reset-password`
+- Notificações de negociação: oferta/mensagem/aceite/rejeição.
+- Notificações de pagamento: confirmação de pagamento.
 
 
 ## Painel MASTER

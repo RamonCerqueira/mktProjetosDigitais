@@ -4,11 +4,14 @@ import com.mktplace.dto.AuthDtos.*;
 import com.mktplace.enums.DocumentType;
 import com.mktplace.enums.Role;
 import com.mktplace.exception.BusinessException;
+import com.mktplace.model.PasswordResetToken;
 import com.mktplace.model.RefreshToken;
 import com.mktplace.model.User;
+import com.mktplace.repository.PasswordResetTokenRepository;
 import com.mktplace.repository.RefreshTokenRepository;
 import com.mktplace.repository.UserRepository;
 import com.mktplace.security.JwtService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
+import java.util.UUID;
 
 import static com.mktplace.validation.DocumentValidator.*;
 import static com.mktplace.validation.InputSanitizer.clean;
@@ -29,13 +33,26 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EmailNotificationService emailNotificationService;
+    private final int passwordResetExpirationMinutes;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService, RefreshTokenRepository refreshTokenRepository) {
+    public AuthService(UserRepository userRepository,
+                       PasswordEncoder passwordEncoder,
+                       AuthenticationManager authenticationManager,
+                       JwtService jwtService,
+                       RefreshTokenRepository refreshTokenRepository,
+                       PasswordResetTokenRepository passwordResetTokenRepository,
+                       EmailNotificationService emailNotificationService,
+                       @Value("${app.notifications.password-reset-expiration-minutes:30}") int passwordResetExpirationMinutes) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.emailNotificationService = emailNotificationService;
+        this.passwordResetExpirationMinutes = passwordResetExpirationMinutes;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -67,6 +84,7 @@ public class AuthService {
                 .active(true)
                 .blocked(false)
                 .build());
+        emailNotificationService.sendRegistrationConfirmation(user);
         return issueTokens(user);
     }
 
@@ -81,6 +99,39 @@ public class AuthService {
     public AuthResponse refresh(String refreshToken) {
         var saved = refreshTokenRepository.findByTokenAndRevokedFalse(refreshToken).filter(token -> token.getExpiresAt().isAfter(Instant.now())).orElseThrow(() -> new BusinessException("Refresh token inválido", HttpStatus.UNAUTHORIZED));
         return issueTokens(saved.getUser());
+    }
+
+    public void requestPasswordReset(String email) {
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) return;
+
+        passwordResetTokenRepository.findByUserAndUsedAtIsNull(user).forEach(token -> token.setUsedAt(Instant.now()));
+
+        PasswordResetToken resetToken = passwordResetTokenRepository.save(PasswordResetToken.builder()
+                .token(UUID.randomUUID().toString())
+                .user(user)
+                .createdAt(Instant.now())
+                .expiresAt(Instant.now().plus(passwordResetExpirationMinutes, ChronoUnit.MINUTES))
+                .build());
+
+        emailNotificationService.sendPasswordReset(user, resetToken.getToken(), passwordResetExpirationMinutes);
+    }
+
+    public void resetPassword(String token, String newPassword) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByTokenAndUsedAtIsNull(token)
+                .orElseThrow(() -> new BusinessException("Token de recuperação inválido", HttpStatus.BAD_REQUEST));
+        if (resetToken.getExpiresAt().isBefore(Instant.now())) {
+            throw new BusinessException("Token de recuperação expirado", HttpStatus.BAD_REQUEST);
+        }
+
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        resetToken.setUsedAt(Instant.now());
+        passwordResetTokenRepository.save(resetToken);
+
+        refreshTokenRepository.revokeAllByUserId(user.getId());
     }
 
     private void validateBrazilianDocument(DocumentType type, String number) {

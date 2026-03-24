@@ -1,5 +1,6 @@
 "use client";
 import api from "@/lib/api";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -18,5 +19,5 @@ export default function LoginPage() {
       router.push(data.user.role === "ADMIN" ? "/admin" : "/dashboard");
     } catch (e: any) { setError(e?.response?.data?.error || "Falha no login"); }
   };
-  return <main className="mx-auto max-w-xl px-6 py-16"><div className="card space-y-4"><h1 className="text-3xl font-bold">Entrar</h1><input className="input" placeholder="Email" onChange={(e) => setEmail(e.target.value)} /><input className="input" type="password" placeholder="Senha" onChange={(e) => setPassword(e.target.value)} />{error && <p className="text-red-400">{error}</p>}<button className="btn-primary w-full" onClick={submit}>Acessar</button></div></main>;
+  return <main className="mx-auto max-w-xl px-6 py-16"><div className="card space-y-4"><h1 className="text-3xl font-bold">Entrar</h1><input className="input" placeholder="Email" onChange={(e) => setEmail(e.target.value)} /><input className="input" type="password" placeholder="Senha" onChange={(e) => setPassword(e.target.value)} />{error && <p className="text-red-400">{error}</p>}<button className="btn-primary w-full" onClick={submit}>Acessar</button><Link href="/forgot-password" className="text-sm text-slate-400 hover:underline">Esqueci minha senha</Link></div></main>;
 }
