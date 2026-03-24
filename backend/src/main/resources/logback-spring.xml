@@ -1,0 +1,11 @@
+<configuration>
+    <property name="CONSOLE_LOG_PATTERN" value="timestamp=%date{ISO8601} level=%level service=marketplace-backend traceId=%X{traceId:-na} logger=%logger{36} thread=%thread msg=%msg%n"/>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+    </root>
+</configuration>
