@@ -31,7 +31,9 @@ export function ChatPanel({ offers, currentUserId }: { offers: Offer[]; currentU
       },
     });
     client.activate();
-    return () => client?.deactivate();
+    return () => {
+      void client?.deactivate();
+    };
   }, [selectedOffer?.id, selectedOffer?.negotiationKey]);
 
   const send = async () => {

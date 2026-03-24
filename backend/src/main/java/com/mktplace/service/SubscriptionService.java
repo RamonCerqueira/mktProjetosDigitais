@@ -175,5 +175,6 @@ public class SubscriptionService {
 
     private void publishEvent(Subscription subscription, String action) {
         eventPublisher.publish(new SubscriptionLifecycleEvent(subscription.getId(), subscription.getUser().getId(), action, subscription.getStatus().name(), subscription.getStatus() == SubscriptionStatus.ACTIVE), "audit");
+        eventPublisher.publish(new SubscriptionLifecycleEvent(subscription.getId(), subscription.getUser().getId(), action, subscription.getStatus().name(), subscription.getStatus() == SubscriptionStatus.ACTIVE), "notification");
     }
 }

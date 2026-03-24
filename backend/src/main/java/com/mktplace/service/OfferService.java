@@ -54,7 +54,7 @@ public class OfferService {
         Offer offer = offerRepository.save(Offer.builder().project(project).buyer(buyer).seller(project.getSeller()).proposer(buyer).negotiationKey(UUID.randomUUID().toString()).amount(request.amount()).status(OfferStatus.OPEN).createdAt(Instant.now()).updatedAt(Instant.now()).build());
         appendHistory(offer, buyer, OfferActionType.CREATED, request.amount(), "Proposta inicial");
         auditService.logAction("OFFER_CREATED", "OFFER", String.valueOf(offer.getId()), "project=" + project.getId());
-        eventPublisher.publish(new OfferLifecycleEvent(offer.getId(), project.getId(), buyer.getId(), project.getSeller().getId(), "CREATED", offer.getAmount()), "notification");
+        eventPublisher.publish(new OfferLifecycleEvent(offer.getId(), project.getId(), buyer.getId(), project.getSeller().getId(), buyer.getId(), project.getSeller().getId(), "CREATED", offer.getAmount()), "notification");
         return toResponse(offer);
     }
 
@@ -70,7 +70,8 @@ public class OfferService {
         offerRepository.save(current);
         appendHistory(counter, actor, OfferActionType.COUNTERED, request.amount(), "Contra-proposta criada");
         auditService.logAction("OFFER_COUNTERED", "OFFER", String.valueOf(counter.getId()), current.getNegotiationKey());
-        eventPublisher.publish(new OfferLifecycleEvent(counter.getId(), current.getProject().getId(), current.getBuyer().getId(), current.getSeller().getId(), "COUNTERED", counter.getAmount()), "notification");
+        Long recipientId = actor.getId().equals(current.getBuyer().getId()) ? current.getSeller().getId() : current.getBuyer().getId();
+        eventPublisher.publish(new OfferLifecycleEvent(counter.getId(), current.getProject().getId(), current.getBuyer().getId(), current.getSeller().getId(), actor.getId(), recipientId, "COUNTERED", counter.getAmount()), "notification");
         return toResponse(counter);
     }
 
@@ -84,7 +85,7 @@ public class OfferService {
         offerRepository.save(offer);
         appendHistory(offer, actor, OfferActionType.ACCEPTED, offer.getAmount(), "Oferta aceita");
         auditService.logAction("OFFER_ACCEPTED", "OFFER", String.valueOf(offer.getId()), offer.getNegotiationKey());
-        eventPublisher.publish(new OfferLifecycleEvent(offer.getId(), offer.getProject().getId(), offer.getBuyer().getId(), offer.getSeller().getId(), "ACCEPTED", offer.getAmount()), "notification");
+        eventPublisher.publish(new OfferLifecycleEvent(offer.getId(), offer.getProject().getId(), offer.getBuyer().getId(), offer.getSeller().getId(), actor.getId(), offer.getProposer().getId(), "ACCEPTED", offer.getAmount()), "notification");
         return toResponse(offer);
     }
 
@@ -98,7 +99,7 @@ public class OfferService {
         offerRepository.save(offer);
         appendHistory(offer, actor, OfferActionType.REJECTED, offer.getAmount(), "Oferta rejeitada");
         auditService.logAction("OFFER_REJECTED", "OFFER", String.valueOf(offer.getId()), offer.getNegotiationKey());
-        eventPublisher.publish(new OfferLifecycleEvent(offer.getId(), offer.getProject().getId(), offer.getBuyer().getId(), offer.getSeller().getId(), "REJECTED", offer.getAmount()), "notification");
+        eventPublisher.publish(new OfferLifecycleEvent(offer.getId(), offer.getProject().getId(), offer.getBuyer().getId(), offer.getSeller().getId(), actor.getId(), offer.getProposer().getId(), "REJECTED", offer.getAmount()), "notification");
         return toResponse(offer);
     }
 
@@ -124,7 +125,7 @@ public class OfferService {
         MessageResponse response = new MessageResponse(message.getId(), offer.getId(), offer.getNegotiationKey(), sender.getId(), sender.getName(), receiver.getId(), receiver.getName(), message.getContent(), message.getCreatedAt());
         messagingTemplate.convertAndSend("/topic/offers/" + offer.getNegotiationKey(), response);
         auditService.logAction("MESSAGE_SENT", "OFFER", String.valueOf(offer.getId()), "receiver=" + receiver.getId());
-        eventPublisher.publish(new OfferLifecycleEvent(offer.getId(), offer.getProject().getId(), offer.getBuyer().getId(), offer.getSeller().getId(), "MESSAGE_SENT", offer.getAmount()), "notification");
+        eventPublisher.publish(new OfferLifecycleEvent(offer.getId(), offer.getProject().getId(), offer.getBuyer().getId(), offer.getSeller().getId(), sender.getId(), receiver.getId(), "MESSAGE_SENT", offer.getAmount()), "notification");
         return response;
     }
 

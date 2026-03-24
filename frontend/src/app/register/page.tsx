@@ -127,6 +127,7 @@ export default function RegisterPage() {
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
       localStorage.setItem("userRole", data.user.role);
+      localStorage.setItem("userId", String(data.user.id));
       router.push(data.user.role === "ADMIN" ? "/admin" : "/dashboard");
     } catch (e: any) {
       setError(e?.response?.data?.error || "Falha no cadastro");

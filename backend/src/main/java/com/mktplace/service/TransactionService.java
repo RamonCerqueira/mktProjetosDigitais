@@ -103,6 +103,9 @@ public class TransactionService {
         transactionRepository.save(tx);
         auditService.logAction("TRANSACTION_WEBHOOK_" + request.eventType(), "TRANSACTION", String.valueOf(tx.getId()), tx.getStripePaymentIntentId());
         eventPublisher.publish(new TransactionLifecycleEvent(tx.getId(), tx.getProject().getId(), tx.getBuyer().getId(), tx.getSeller().getId(), request.eventType(), tx.getAmount(), tx.getStatus().name()), "integration");
+        if (tx.getStatus() == TransactionStatus.HELD) {
+            eventPublisher.publish(new TransactionLifecycleEvent(tx.getId(), tx.getProject().getId(), tx.getBuyer().getId(), tx.getSeller().getId(), "PAYMENT_COMPLETED", tx.getAmount(), tx.getStatus().name()), "notification");
+        }
     }
 
     public boolean validateStripeSignature(String payload, String signature) {

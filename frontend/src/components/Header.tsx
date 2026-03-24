@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { NotificationBell } from "./NotificationBell";
 
 export function Header() {
   const [logged, setLogged] = useState(false);
@@ -13,7 +14,7 @@ export function Header() {
         <nav className="flex flex-wrap gap-3 text-sm items-center">
           <Link href="/projects" className="btn-secondary">Marketplace</Link>
           <Link href="/marketplace-rules" className="btn-secondary">Regras</Link>
-          {logged ? <><Link href={role === "ADMIN" ? "/admin" : "/dashboard"} className="btn-primary">{role === "ADMIN" ? "Admin" : "Dashboard"}</Link><Link href="/help" className="btn-secondary">Ajuda</Link></> : <><Link href="/login" className="btn-secondary">Entrar</Link><Link href="/register" className="btn-primary">Criar conta</Link></>}
+          {logged ? <><NotificationBell /><Link href={role === "ADMIN" ? "/admin" : "/dashboard"} className="btn-primary">{role === "ADMIN" ? "Admin" : "Dashboard"}</Link><Link href="/help" className="btn-secondary">Ajuda</Link></> : <><Link href="/login" className="btn-secondary">Entrar</Link><Link href="/register" className="btn-primary">Criar conta</Link></>}
         </nav>
       </div>
     </header>

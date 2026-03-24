@@ -35,6 +35,7 @@ export interface Transaction { id: number; projectId: number; amount: number; pl
 
 export interface OfferHistory { id: number; offerId: number; actorId: number; actionType: string; amount: number; details: string; createdAt: string; }
 export interface Message { id: number; offerId: number; negotiationKey: string; senderId: number; senderName: string; receiverId: number; receiverName: string; content: string; createdAt: string; }
+export interface NotificationItem { id: number; type: "NEW_MESSAGE" | "NEW_OFFER" | "OFFER_ACCEPTED" | "OFFER_REJECTED" | "PAYMENT_COMPLETED" | "SUBSCRIPTION_EXPIRING"; title: string; body: string; createdAt: string; readAt?: string | null; }
 
 export interface TimeSeriesPoint { label: string; value: number; }
 export interface AdminOverview { financial: { monthlyRecurringRevenue: number; totalRevenue: number; totalCommission: number; activeSubscriptions: number; churnRate: number; }; conversion: { visitors: number; users: number; subscribers: number; visitorToUserRate: number; userToSubscriberRate: number; retentionRate: number; }; projects: { totalProjects: number; soldProjects: number; suspiciousProjects: number; }; newUsersByDay: TimeSeriesPoint[]; projectsByDay: TimeSeriesPoint[]; topSellers: Array<{ sellerId: number; sellerName: string; soldProjects: number; grossRevenue: number; }>; }
