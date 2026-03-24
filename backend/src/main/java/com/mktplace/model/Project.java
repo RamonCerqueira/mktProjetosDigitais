@@ -26,6 +26,7 @@ public class Project {
     private String techStack;
     private BigDecimal price;
     private BigDecimal monthlyRevenue;
+    private Integer activeUsers;
     @Enumerated(EnumType.STRING)
     private ProjectStatus status;
     @Builder.Default

@@ -118,3 +118,12 @@ WHERE email = 'usuario@exemplo.com'
 ```
 
 > Observação: a senha armazenada no banco precisa estar em BCrypt. O hash acima é apenas um exemplo de valor já criptografado.
+
+
+## Curadoria e qualificação
+- Apenas usuários com **CPF** podem ser `SELLER` e publicar projetos. Contas com **CNPJ** podem existir, mas não podem vender projetos.
+- O score do projeto agora considera descrição, clareza, stack informada, MRR e usuários ativos.
+- Classificação do projeto: `Baixo`, `Médio`, `Alto`.
+- Reputação do dev: `Iniciante`, `Intermediário`, `Avançado`, `Top Seller`.
+- Badges de confiança: `CPF verificado` e `Projeto verificado`.
+- Antifraude básico: preço irreal, duplicação por seller e alerta administrativo.

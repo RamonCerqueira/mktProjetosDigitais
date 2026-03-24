@@ -28,19 +28,22 @@ public class ProjectService {
     private final AuditService auditService;
     private final FraudPreventionService fraudPreventionService;
     private final ProjectIntelligenceService projectIntelligenceService;
+    private final DeveloperQualificationService developerQualificationService;
     private final MarketplaceEventPublisher eventPublisher;
 
-    public ProjectService(ProjectRepository projectRepository, SubscriptionService subscriptionService, AuditService auditService, FraudPreventionService fraudPreventionService, ProjectIntelligenceService projectIntelligenceService, MarketplaceEventPublisher eventPublisher) {
+    public ProjectService(ProjectRepository projectRepository, SubscriptionService subscriptionService, AuditService auditService, FraudPreventionService fraudPreventionService, ProjectIntelligenceService projectIntelligenceService, DeveloperQualificationService developerQualificationService, MarketplaceEventPublisher eventPublisher) {
         this.projectRepository = projectRepository;
         this.subscriptionService = subscriptionService;
         this.auditService = auditService;
         this.fraudPreventionService = fraudPreventionService;
         this.projectIntelligenceService = projectIntelligenceService;
+        this.developerQualificationService = developerQualificationService;
         this.eventPublisher = eventPublisher;
     }
 
     @CacheEvict(cacheNames = {"publicProjects", "topRankedProjects"}, allEntries = true)
     public ProjectResponse create(User user, ProjectRequest request) {
+        assertIndividualSeller(user);
         subscriptionService.assertCanPublish(user);
         Project project = Project.builder()
                 .seller(user)
@@ -50,11 +53,12 @@ public class ProjectService {
                 .techStack(clean(request.techStack()))
                 .price(request.price())
                 .monthlyRevenue(request.monthlyRevenue())
+                .activeUsers(request.activeUsers())
                 .status(ProjectStatus.PUBLISHED)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
-        fraudPreventionService.validateProjectListing(project);
+        fraudPreventionService.validateProjectListing(user, project, false);
         project = projectRepository.save(project);
         auditService.logAction("PROJECT_CREATED", "PROJECT", String.valueOf(project.getId()), project.getTitle());
         eventPublisher.publish(new ProjectLifecycleEvent(project.getId(), user.getId(), "CREATED", project.getTitle()), "integration");
@@ -83,6 +87,7 @@ public class ProjectService {
 
     @CacheEvict(cacheNames = {"publicProjects", "topRankedProjects"}, allEntries = true)
     public ProjectResponse update(User user, Long id, ProjectRequest request) {
+        assertIndividualSeller(user);
         Project project = getOwnedProject(user, id);
         subscriptionService.assertCanPublish(user);
         project.setTitle(clean(request.title()));
@@ -91,9 +96,10 @@ public class ProjectService {
         project.setTechStack(clean(request.techStack()));
         project.setPrice(request.price());
         project.setMonthlyRevenue(request.monthlyRevenue());
+        project.setActiveUsers(request.activeUsers());
         project.setUpdatedAt(Instant.now());
         project.setStatus(ProjectStatus.PUBLISHED);
-        fraudPreventionService.validateProjectListing(project);
+        fraudPreventionService.validateProjectListing(user, project, true);
         Project saved = projectRepository.save(project);
         auditService.logAction("PROJECT_UPDATED", "PROJECT", String.valueOf(saved.getId()), saved.getTitle());
         eventPublisher.publish(new ProjectLifecycleEvent(saved.getId(), user.getId(), "UPDATED", saved.getTitle()), "integration");
@@ -126,7 +132,13 @@ public class ProjectService {
         return project;
     }
 
+    private void assertIndividualSeller(User user) {
+        if (user.getDocumentType() == null || user.getDocumentType().name().equals("CNPJ")) {
+            throw new BusinessException("A plataforma é focada em dev individual: empresas com CNPJ não podem publicar projetos.", HttpStatus.BAD_REQUEST);
+        }
+    }
+
     public ProjectResponse toResponse(Project project, Integer ranking) {
-        return new ProjectResponse(project.getId(), project.getTitle(), project.getDescription(), project.getCategory(), project.getTechStack(), project.getPrice(), project.getMonthlyRevenue(), project.getStatus().name(), project.getSeller().getId(), project.getSeller().getName(), project.getSeller().getCity(), project.getSeller().getState(), projectIntelligenceService.score(project), ranking, projectIntelligenceService.suggestedPrice(project), projectIntelligenceService.suspicious(project));
+        return new ProjectResponse(project.getId(), project.getTitle(), project.getDescription(), project.getCategory(), project.getTechStack(), project.getPrice(), project.getMonthlyRevenue(), project.getActiveUsers(), project.getStatus().name(), project.getSeller().getId(), project.getSeller().getName(), project.getSeller().getCity(), project.getSeller().getState(), projectIntelligenceService.score(project), projectIntelligenceService.qualification(project), ranking, projectIntelligenceService.suggestedPrice(project), projectIntelligenceService.suspicious(project), developerQualificationService.level(project.getSeller()), developerQualificationService.verified(project.getSeller()), project.isVerified());
     }
 }

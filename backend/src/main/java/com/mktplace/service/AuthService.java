@@ -42,6 +42,7 @@ public class AuthService {
         userRepository.findByEmail(request.email()).ifPresent(u -> { throw new BusinessException("Email já cadastrado", HttpStatus.CONFLICT); });
         Role role = request.role() == null ? Role.BUYER : request.role();
         DocumentType documentType = request.documentType() == null ? DocumentType.CPF : request.documentType();
+        if (role == Role.SELLER && documentType == DocumentType.CNPJ) throw new BusinessException("A plataforma é focada em dev individual: apenas pessoas físicas com CPF podem ser sellers.", HttpStatus.BAD_REQUEST);
         validateBrazilianDocument(documentType, request.documentNumber());
         String sanitizedDocument = digits(request.documentNumber());
         User user = userRepository.save(User.builder()

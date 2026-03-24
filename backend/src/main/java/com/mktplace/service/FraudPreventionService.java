@@ -3,6 +3,7 @@ package com.mktplace.service;
 import com.mktplace.exception.BusinessException;
 import com.mktplace.model.Project;
 import com.mktplace.model.User;
+import com.mktplace.repository.ProjectRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -14,9 +15,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FraudPreventionService {
     private final Map<String, Integer> offerAttempts = new ConcurrentHashMap<>();
     private final ProjectIntelligenceService projectIntelligenceService;
+    private final ProjectRepository projectRepository;
+    private final AuditService auditService;
 
-    public FraudPreventionService(ProjectIntelligenceService projectIntelligenceService) {
+    public FraudPreventionService(ProjectIntelligenceService projectIntelligenceService, ProjectRepository projectRepository, AuditService auditService) {
         this.projectIntelligenceService = projectIntelligenceService;
+        this.projectRepository = projectRepository;
+        this.auditService = auditService;
     }
 
     public void validateOffer(User buyer, Project project, BigDecimal amount) {
@@ -32,7 +37,17 @@ public class FraudPreventionService {
         if (project.getSeller().getId().equals(buyer.getId())) throw new BusinessException("Compra antifraude bloqueada para o próprio seller", HttpStatus.BAD_REQUEST);
     }
 
-    public void validateProjectListing(Project project) {
-        if (projectIntelligenceService.suspicious(project)) throw new BusinessException("Projeto bloqueado pela heurística antifraude de preço", HttpStatus.BAD_REQUEST);
+    public void validateProjectListing(User seller, Project project, boolean updating) {
+        if (seller.getDocumentType() == null || seller.getDocumentType().name().equals("CNPJ")) {
+            throw new BusinessException("A plataforma é focada em dev individual: apenas pessoas físicas com CPF podem publicar projetos.", HttpStatus.BAD_REQUEST);
+        }
+        if (project.getTitle() != null && projectRepository.existsBySellerAndTitleIgnoreCase(seller, project.getTitle()) && !updating) {
+            auditService.logAction("ADMIN_ALERT_DUPLICATE_PROJECT", "PROJECT", String.valueOf(seller.getId()), project.getTitle());
+            throw new BusinessException("Projeto duplicado detectado para o mesmo seller.", HttpStatus.CONFLICT);
+        }
+        if (projectIntelligenceService.suspicious(project)) {
+            auditService.logAction("ADMIN_ALERT_SUSPICIOUS_PROJECT", "PROJECT", String.valueOf(seller.getId()), project.getTitle());
+            throw new BusinessException("Projeto bloqueado pela heurística antifraude de preço", HttpStatus.BAD_REQUEST);
+        }
     }
 }

@@ -11,6 +11,8 @@ import java.util.List;
 
 public interface ProjectRepository extends JpaRepository<Project, Long> {
     List<Project> findBySeller(User seller);
+    boolean existsBySellerAndTitleIgnoreCase(User seller, String title);
+
 
     @EntityGraph(attributePaths = "seller")
     @Query("""
