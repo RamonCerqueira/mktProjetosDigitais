@@ -1,0 +1,14 @@
+backend/build/
+frontend/.next/
+frontend/node_modules/
+.env
+*.log
+.DS_Store
+
+backend/.gradle/
+
+backend/target/
+frontend/coverage/
+.env.local
+backend/.env
+frontend/.env
