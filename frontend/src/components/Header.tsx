@@ -1,21 +1,52 @@
 "use client";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { NotificationBell } from "./NotificationBell";
+
+const navLinks = [
+  { href: "/#como-funciona", label: "Como Funciona" },
+  { href: "/subscription", label: "Preços" },
+  { href: "/help", label: "Ajuda" }
+];
 
 export function Header() {
   const [logged, setLogged] = useState(false);
-  const [role, setRole] = useState<string | null>(null);
-  useEffect(() => { setLogged(!!localStorage.getItem("accessToken")); setRole(localStorage.getItem("userRole")); }, []);
+
+  useEffect(() => {
+    setLogged(!!localStorage.getItem("accessToken"));
+  }, []);
+
   return (
-    <header className="border-b border-slate-800 bg-slate-950/90 sticky top-0 z-10">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <Link href="/" className="text-xl font-bold text-emerald-400">MicroSaaS Market</Link>
-        <nav className="flex flex-wrap gap-3 text-sm items-center">
-          <Link href="/projects" className="btn-secondary">Marketplace</Link>
-          <Link href="/marketplace-rules" className="btn-secondary">Regras</Link>
-          {logged ? <><NotificationBell /><Link href={role === "ADMIN" ? "/admin" : "/dashboard"} className="btn-primary">{role === "ADMIN" ? "Admin" : "Dashboard"}</Link><Link href="/help" className="btn-secondary">Ajuda</Link></> : <><Link href="/login" className="btn-secondary">Entrar</Link><Link href="/register" className="btn-primary">Criar conta</Link></>}
+    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
+      <div className="mx-auto flex w-full max-w-7xl items-center gap-4 px-4 py-4 lg:px-8">
+        <Link href="/" className="flex items-center gap-3 text-3xl font-bold text-blue-950">
+          <span className="grid size-11 place-items-center rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white shadow">✦</span>
+          <span className="text-[38px] leading-none">Logo</span>
+        </Link>
+
+        <nav className="hidden flex-1 items-center justify-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 md:flex">
+          {navLinks.map((item) => (
+            <Link key={item.href} href={item.href} className="rounded-full px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-white hover:text-blue-700">
+              {item.label}
+            </Link>
+          ))}
+          <button className="ml-1 grid size-9 place-items-center rounded-full bg-white text-slate-600 shadow-sm transition hover:text-blue-700" aria-label="Buscar">
+            🔍
+          </button>
         </nav>
+
+        <div className="ml-auto flex items-center gap-3">
+          <Link href="/login" className="rounded-full px-5 py-2 font-semibold text-slate-700 transition hover:bg-slate-100">
+            Entrar
+          </Link>
+          <span className="relative grid size-10 place-items-center rounded-full bg-gradient-to-r from-blue-400 to-blue-600 text-white shadow">
+            👤
+            <span className="absolute -right-1 -top-1 size-2 rounded-full bg-emerald-400" />
+          </span>
+          <Link href={logged ? "/dashboard" : "/register"} className="rounded-full bg-gradient-to-r from-blue-500 to-blue-700 px-6 py-2 font-semibold text-white shadow transition hover:brightness-110">
+            {logged ? "Dashboard" : "Cadastrar-se"}
+          </Link>
+        </div>
       </div>
     </header>
   );
