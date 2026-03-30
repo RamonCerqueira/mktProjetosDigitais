@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "[build] backend"
-(cd backend && mvn -q -DskipTests package)
-
-echo "[build] frontend"
+echo "[build] frontend fullstack"
 (cd frontend && npm install && npm run build)

@@ -10,12 +10,19 @@
     "test": "jest --runInBand"
   },
   "dependencies": {
+    "@prisma/client": "^6.7.0",
     "@stomp/stompjs": "^7.1.1",
     "axios": "^1.8.4",
+    "bcryptjs": "^3.0.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "jsonwebtoken": "^9.0.2",
     "next": "15.2.4",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "sockjs-client": "^1.6.1"
+    "sockjs-client": "^1.6.1",
+    "tailwind-merge": "^3.3.0",
+    "zod": "^3.24.4"
   },
   "devDependencies": {
     "@types/node": "^22.13.14",
@@ -30,6 +37,7 @@
     "jest-environment-jsdom": "^29.7.0",
     "ts-jest": "^29.2.5",
     "@types/jest": "^29.5.14",
-    "identity-obj-proxy": "^3.0.0"
+    "identity-obj-proxy": "^3.0.0",
+    "prisma": "^6.7.0"
   }
 }

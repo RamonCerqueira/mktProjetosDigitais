@@ -9,7 +9,7 @@ const readCookie = (name: string) => {
 };
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1",
   withCredentials: true,
 });
 
@@ -20,6 +20,8 @@ api.interceptors.request.use((config) => {
     config.headers = config.headers ?? {};
     if (token) config.headers.Authorization = `Bearer ${token}`;
     if (csrf && config.method && config.method.toLowerCase() !== "get") config.headers["X-XSRF-TOKEN"] = decodeURIComponent(csrf);
+    const userId = localStorage.getItem("userId");
+    if (userId) config.headers["x-user-id"] = userId;
   }
   return config;
 });
