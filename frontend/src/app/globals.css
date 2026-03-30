@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply min-h-screen text-slate-900;
+  background:
+    radial-gradient(circle at 0% 5%, rgba(191, 219, 254, 0.55) 0%, rgba(248, 250, 252, 0) 35%),
+    radial-gradient(circle at 100% 0%, rgba(199, 210, 254, 0.35) 0%, rgba(248, 250, 252, 0) 30%),
+    #f8fafc;
+}
+
+.hero {
+  background: linear-gradient(135deg, #f8fbff 0%, #eef2ff 55%, #f8fafc 100%);
+  border: 1px solid #dbeafe;
+}
+
+.card {
+  @apply rounded-2xl border border-slate-200 bg-white p-6 shadow-sm;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center rounded-xl px-4 py-2 font-medium transition;
+}
+
+.btn-primary {
+  @apply btn bg-blue-600 text-white hover:bg-blue-700;
+}
+
+.btn-secondary {
+  @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-100;
+}
+
+.btn-portal {
+  @apply inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:brightness-110;
+}
+
+.input {
+  @apply w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-blue-500;
+}
+
+.input-light {
+  @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-800 outline-none focus:border-blue-400;
+}
