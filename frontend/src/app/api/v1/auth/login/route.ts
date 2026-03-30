@@ -1,20 +1,23 @@
-import { db } from "@/server/db";
-import { loginSchema } from "@/server/schemas/auth";
 import { fail, ok } from "@/server/api/response";
-import bcrypt from "bcryptjs";
 import { signToken } from "@/server/api/auth";
+import { readDb, hashPassword } from "@/server/store";
+import { validateLogin } from "@/server/schemas/auth";
 
 export async function POST(req: Request) {
-  const json = await req.json();
-  const parsed = loginSchema.safeParse(json);
-  if (!parsed.success) return fail(parsed.error.issues[0]?.message || "Payload inválido", 400);
+  try {
+    const json = await req.json();
+    validateLogin(json);
 
-  const user = await db.user.findUnique({ where: { email: parsed.data.email } });
-  if (!user) return fail("Credenciais inválidas", 401);
+    const db = await readDb();
+    const user = db.users.find((u) => u.email.toLowerCase() === json.email.toLowerCase());
+    if (!user) return fail("Credenciais inválidas", 401);
 
-  const valid = await bcrypt.compare(parsed.data.password, user.passwordHash);
-  if (!valid) return fail("Credenciais inválidas", 401);
+    const valid = hashPassword(json.password) === user.passwordHash;
+    if (!valid) return fail("Credenciais inválidas", 401);
 
-  const token = signToken({ sub: user.id, role: user.role, email: user.email });
-  return ok({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+    const token = signToken({ sub: user.id, role: user.role, email: user.email });
+    return ok({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+  } catch (e: any) {
+    return fail(e?.message || "Payload inválido", 400);
+  }
 }

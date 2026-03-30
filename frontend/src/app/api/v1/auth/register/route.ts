@@ -1,26 +1,28 @@
-import { db } from "@/server/db";
-import { registerSchema } from "@/server/schemas/auth";
 import { fail, ok } from "@/server/api/response";
-import bcrypt from "bcryptjs";
+import { readDb, writeDb, id, hashPassword } from "@/server/store";
+import { validateRegister } from "@/server/schemas/auth";
 
 export async function POST(req: Request) {
-  const json = await req.json();
-  const parsed = registerSchema.safeParse(json);
-  if (!parsed.success) return fail(parsed.error.issues[0]?.message || "Payload inválido", 400);
+  try {
+    const json = await req.json();
+    validateRegister(json);
 
-  const exists = await db.user.findUnique({ where: { email: parsed.data.email } });
-  if (exists) return fail("E-mail já cadastrado", 409);
+    const db = await readDb();
+    if (db.users.some((u) => u.email.toLowerCase() === json.email.toLowerCase())) return fail("E-mail já cadastrado", 409);
 
-  const passwordHash = await bcrypt.hash(parsed.data.password, 10);
-  const user = await db.user.create({
-    data: {
-      name: parsed.data.name,
-      email: parsed.data.email,
-      role: parsed.data.role,
-      passwordHash,
-    },
-    select: { id: true, name: true, email: true, role: true, createdAt: true },
-  });
+    const user = {
+      id: id(),
+      name: json.name,
+      email: json.email,
+      role: json.role || "BUYER",
+      passwordHash: hashPassword(json.password),
+      createdAt: new Date().toISOString(),
+    };
+    db.users.push(user);
+    await writeDb(db);
 
-  return ok({ user }, 201);
+    return ok({ user: { id: user.id, name: user.name, email: user.email, role: user.role, createdAt: user.createdAt } }, 201);
+  } catch (e: any) {
+    return fail(e?.message || "Payload inválido", 400);
+  }
 }

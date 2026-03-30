@@ -1,13 +1,13 @@
-import { z } from "zod";
+export type RegisterInput = { name: string; email: string; password: string; role?: "ADMIN" | "SELLER" | "BUYER" };
+export type LoginInput = { email: string; password: string };
 
-export const registerSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(8),
-  role: z.enum(["ADMIN", "SELLER", "BUYER"]).default("BUYER"),
-});
+export function validateRegister(input: RegisterInput) {
+  if (!input.name || input.name.length < 2) throw new Error("Nome inválido");
+  if (!input.email || !input.email.includes("@")) throw new Error("E-mail inválido");
+  if (!input.password || input.password.length < 8) throw new Error("Senha deve ter no mínimo 8 caracteres");
+}
 
-export const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-});
+export function validateLogin(input: LoginInput) {
+  if (!input.email || !input.email.includes("@")) throw new Error("E-mail inválido");
+  if (!input.password || input.password.length < 8) throw new Error("Senha inválida");
+}

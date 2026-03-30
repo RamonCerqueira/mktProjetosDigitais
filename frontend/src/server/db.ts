@@ -1,6 +1,3 @@
-import { PrismaClient } from "@prisma/client";
-
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
-
-export const db = globalForPrisma.prisma ?? new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+// Prisma placeholder for future migration.
+// Current runtime uses lightweight JSON store in src/server/store.ts
+export const db = null;

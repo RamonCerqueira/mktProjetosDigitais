@@ -1,9 +1,7 @@
-import { z } from "zod";
+export type ProjectInput = { title: string; description: string; category?: string | null; techStack?: string | null; price: number };
 
-export const projectSchema = z.object({
-  title: z.string().min(3).max(120),
-  description: z.string().min(20).max(4000),
-  category: z.string().max(60).optional().nullable(),
-  techStack: z.string().max(120).optional().nullable(),
-  price: z.number().positive(),
-});
+export function validateProject(input: ProjectInput) {
+  if (!input.title || input.title.length < 3) throw new Error("Título inválido");
+  if (!input.description || input.description.length < 20) throw new Error("Descrição inválida");
+  if (!(input.price > 0)) throw new Error("Preço deve ser maior que zero");
+}
